@@ -18,6 +18,7 @@ namespace SSISPackageAutomation
 
             Program pg = new Program();
             //pg.CreatePackage();
+            //commit
             pg.GetPostGreSQLSchema();
         }
 
@@ -52,7 +53,7 @@ namespace SSISPackageAutomation
                     if (i != schema.Rows.Count)
                     {
                         sqlselect.Append(row["COLUMNNAME"].ToString()+"  ");
-                        sqlselect.Append(row["DATATYPE"].ToString() +","); //pass the system datatype to a function and get sql datatype
+                        sqlselect.Append(row["DATATYPE"].ToString() +","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
                     }
                     else
                     {
@@ -85,6 +86,11 @@ namespace SSISPackageAutomation
             }
         }
 
+
+        public void GetSQLDataType()
+        {
+
+        }
 
         public void CreatePackage()
         {
