@@ -8,7 +8,6 @@ using Wrapper = Microsoft.SqlServer.Dts.Runtime.Wrapper;
 using Npgsql;
 using System.Data;
 
-
 namespace SSISPackageAutomation
 {
     class Program
@@ -53,12 +52,12 @@ namespace SSISPackageAutomation
                     if (i != schema.Rows.Count)
                     {
                         sqlselect.Append(row["COLUMNNAME"].ToString()+"  ");
-                        sqlselect.Append(row["DATATYPE"].ToString() +","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
+                        sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString() )+ ","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
                     }
                     else
                     {
                         sqlselect.Append(row["COLUMNNAME"].ToString()+"  ");
-                        sqlselect.Append(row["DATATYPE"].ToString() +")"); //pass the system datatype to a function and get sql datatype
+                        sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString()) + ")"); //pass the system datatype to a function and get sql datatype
                     }
 
                     //string ColumnName = row["COLUMNNAME"].ToString();
@@ -67,7 +66,11 @@ namespace SSISPackageAutomation
                 }
 
                 // Create table in destination sql database to hold file data
-             
+
+                //sqlselect.Replace("", "");
+                //sqlselect.Replace("System.Int32", "INT");
+
+
                 var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "LDAP"));
                 var command = new SqlCommand(sql.ToString(), connection);
                 // Create table in destination sql database to hold file data
@@ -86,10 +89,22 @@ namespace SSISPackageAutomation
             }
         }
 
-
-        public void GetSQLDataType()
+        public string GetSQLDataType(string postgresqltype)
         {
-
+            string sqltype = null;
+            switch (postgresqltype)
+            {
+                case "System.Int32":
+                    sqltype = "INT";
+                    break;
+                case "System.String":
+                    sqltype = "NVARCHAR(255)";
+                    break;
+                default:
+                    sqltype = "NVARCHAR(255)";
+                    break;
+            }
+            return sqltype;
         }
 
         public void CreatePackage()
@@ -99,7 +114,7 @@ namespace SSISPackageAutomation
                 Console.Title = "File Loader";
                 Console.ForegroundColor = ConsoleColor.Yellow;
 
-                // Read input parameters
+                //// Read input parameters
                 var file = "C:\\vamshi\\GIT\\SSIS PackageAutomation\\SSISPackageAutomation\\FILELOCATION\\SAMPLEINPUT.txt";
                 var server = "ebi-etl-dev-01";
                 var database = "LDAP";
