@@ -16,9 +16,10 @@ namespace SSISPackageAutomation
         {
 
             Program pg = new Program();
-            //pg.CreatePackage();
+           // pg.GetPostGreSQLSchema();
+            pg.CreatePackage();
             //commit
-            pg.GetPostGreSQLSchema();
+            
         }
 
         public void GetPostGreSQLSchema()
@@ -31,6 +32,8 @@ namespace SSISPackageAutomation
 
                 NpgsqlConnection conn = new NpgsqlConnection(connstring);
                 conn.Open();
+
+                //string sqldrop = ""
 
                 string sql = "SELECT * FROM PRODUCTS where 1 = 0";
                 NpgsqlCommand cmd = new NpgsqlCommand(sql, conn);
@@ -123,54 +126,20 @@ namespace SSISPackageAutomation
 
                 // Create a new SSIS Package
                 var package = new Package();
+                SSISConnection conn = new SSISConnection();
+                package.ProtectionLevel = DTSProtectionLevel.DontSaveSensitive;
 
-                // Add a Connection Manager to the Package, of type, FLATFILE
-                var connMgrFlatFile = package.Connections.Add("FLATFILE");
+                //conn.CreateODBCConnection(package);
+                ConnectionManager ConMgr;
+                ConMgr = package.Connections.Add("ODBC");
+                ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=localhost;uid=vams3203;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                ConMgr.Name = "SSIS Connection Manager for ODBC to connect POSTGRESQL";
+                ConMgr.Description = "OLE DB connection to the PostGreSQL Database";
+                
 
-                connMgrFlatFile.ConnectionString = file;
-                connMgrFlatFile.Name = "My Import File Connection";
-                connMgrFlatFile.Description = "Flat File Connection";
-
-                // Get the Column names to be used in configuring the Flat File Connection 
-                // by reading the first line of the Import File which contains the Field names
-                string[] columns = null;
-
-                using (var stream = new StreamReader(file))
-                {
-                    var fieldNames = stream.ReadLine();
-                    if (fieldNames != null) columns = fieldNames.Split(" ".ToCharArray());
-                }
-
-                // Configure Columns and their Properties for the Flat File Connection Manager
-                var connMgrFlatFileInnerObj = (Wrapper.IDTSConnectionManagerFlatFile100)connMgrFlatFile.InnerObject;
-
-                connMgrFlatFileInnerObj.RowDelimiter = "\r\n";
-                connMgrFlatFileInnerObj.ColumnNamesInFirstDataRow = true;
-
-                if (columns != null)
-                {
-                    foreach (var column in columns)
-                    {
-                        // Add a new Column to the Flat File Connection Manager
-                        var flatFileColumn = connMgrFlatFileInnerObj.Columns.Add();
-
-                        flatFileColumn.DataType = Wrapper.DataType.DT_WSTR;
-                        flatFileColumn.ColumnWidth = 255;
-
-                        flatFileColumn.ColumnDelimiter = columns.GetUpperBound(0) == Array.IndexOf(columns, column) ? "\r\n" : "\t";
-
-                        flatFileColumn.ColumnType = "Delimited";
-
-                        // Use the Import File Field name to name the Column
-                        var columnName = flatFileColumn as Wrapper.IDTSName100;
-                        if (columnName != null) columnName.Name = column;
-                    }
-
-                    // Add a Connection Manager to the Package, of type, OLEDB 
-                    var connMgrOleDb = package.Connections.Add("OLEDB");
-
+                // Add a Connection Manager to the Package, of type, OLEDB 
+                var connMgrOleDb = package.Connections.Add("OLEDB");
                     var connectionString = new StringBuilder();
-
                     connectionString.Append("Provider=SQLOLEDB.1;");
                     connectionString.Append("Integrated Security=SSPI;Initial Catalog=");
                     connectionString.Append(database);
@@ -194,22 +163,24 @@ namespace SSISPackageAutomation
 
                         if (dataFlowTask != null)
                         {
-                            // Add a Flat File Source Component to the Data Flow Task
-                            var flatFileSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
-                            flatFileSourceComponent.Name = "My Flat File Source";
-                            flatFileSourceComponent.ComponentClassID = app.PipelineComponentInfos["Flat File Source"].CreationName;
+                            // Add a Flat ODBC Source Component to the Data Flow Task
+                            var ODBCSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
+                            ODBCSourceComponent.Name = "My PostgreSQL Component";
+                            ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName;
 
-                            // Get the design time instance of the Flat File Source Component
-                            var flatFileSourceInstance = flatFileSourceComponent.Instantiate();
-                            flatFileSourceInstance.ProvideComponentProperties();
+                            // Get the design time instance of the ODBC Source Component
+                            var ODBCSourceInstance = ODBCSourceComponent.Instantiate();
+                            ODBCSourceInstance.ProvideComponentProperties();
 
-                            flatFileSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(connMgrFlatFile);
-                            flatFileSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = connMgrFlatFile.ID;
+                            ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(ConMgr);
+                            ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = ConMgr.ID;
+
+                            ODBCSourceInstance.SetComponentProperty("OpenRowset", "PUBLIC.PRODUCTS");
 
                             // Reinitialize the metadata.
-                            flatFileSourceInstance.AcquireConnections(null);
-                            flatFileSourceInstance.ReinitializeMetaData();
-                            flatFileSourceInstance.ReleaseConnections();
+                            ODBCSourceInstance.AcquireConnections(null);
+                            ODBCSourceInstance.ReinitializeMetaData();
+                            ODBCSourceInstance.ReleaseConnections();
 
                             // Add an OLE DB Destination Component to the Data Flow
                             var oleDbDestinationComponent = dataFlowTask.ComponentMetaDataCollection.New();
@@ -220,69 +191,44 @@ namespace SSISPackageAutomation
                             var oleDbDestinationInstance = oleDbDestinationComponent.Instantiate();
                             oleDbDestinationInstance.ProvideComponentProperties();
 
-                            // Set Ole Db Destination Connection
+                        // Set Ole Db Destination Connection
                             oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManagerID = connMgrOleDb.ID;
                             oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(connMgrOleDb);
 
-                            // Set destination load type
+                        // Set destination load type
                             oleDbDestinationInstance.SetComponentProperty("AccessMode", 3);
 
-                            // Create table in destination sql database to hold file data
-                            var sql = new StringBuilder();
+                         // Now set Ole Db Destination Table name
+                           oleDbDestinationInstance.SetComponentProperty("OpenRowset", "Products");
 
-                            sql.Append("CREATE TABLE ");
-                            sql.Append(Path.GetFileNameWithoutExtension(file));
-                            sql.Append(" (");
-
-                            foreach (var columnName in columns)
-                            {
-                                if (columns.GetUpperBound(0) == Array.IndexOf(columns, columnName))
-                                {
-                                    sql.Append(columnName);
-                                    sql.Append(" NVARCHAR(255))");
-                                }
-                                else
-                                {
-                                    sql.Append(columnName);
-                                    sql.Append(" NVARCHAR(255),");
-                                }
-                            }
-                            var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", server, database));
-                            var command = new SqlCommand(sql.ToString(), connection);
-
-                            connection.Open();
-                            command.ExecuteNonQuery();
-                            connection.Close();
-
-                            // Now set Ole Db Destination Table name
-                            oleDbDestinationInstance.SetComponentProperty("OpenRowset", Path.GetFileNameWithoutExtension(file));
-
-                            // Create a Precedence Constraint between Flat File Source and OLEDB Destination Components
+                         // Create a Precedence Constraint between Flat File Source and OLEDB Destination Components
                             var path = dataFlowTask.PathCollection.New();
-                            path.AttachPathAndPropagateNotifications(flatFileSourceComponent.OutputCollection[0],
-                                oleDbDestinationComponent.InputCollection[0]);
+                            path.AttachPathAndPropagateNotifications(ODBCSourceComponent.OutputCollection[0], oleDbDestinationComponent.InputCollection[0]);
 
-                            // Get the list of available columns
+                         //CREATE A DATA CONVERSION
+                            //IDTSComponentMetaData100 conversionDataFlowComponent = dataFlowTask.ComponentMetaDataCollection.New();// creating data conversion 
+                            //conversionDataFlowComponent.ComponentClassID = "{C3BF62C8-7C5C-4F85-83C3-E0B6F6BE267C}";// This is the GUID for data conversion component
+                            //CManagedComponentWrapper conversionInstance = conversionDataFlowComponent.Instantiate();//Instantiate
+                            //conversionInstance.ProvideComponentProperties();
+
+                            //conversionDataFlowComponent.Name = "Conversion compoenent";
+                        
+                         // Get the list of available columns
                             var oleDbDestinationInput = oleDbDestinationComponent.InputCollection[0];
                             var oleDbDestinationvInput = oleDbDestinationInput.GetVirtualInput();
 
-                            var oleDbDestinationVirtualInputColumns =
-                                oleDbDestinationvInput.VirtualInputColumnCollection;
+                            var oleDbDestinationVirtualInputColumns = oleDbDestinationvInput.VirtualInputColumnCollection;
 
-                            // Reinitialize the metadata
+                         // Reinitialize the metadata
                             oleDbDestinationInstance.AcquireConnections(null);
                             oleDbDestinationInstance.ReinitializeMetaData();
                             oleDbDestinationInstance.ReleaseConnections();
 
-                            // Map Flat File Source Component Output Columns to Ole Db Destination Input Columns
+                         // Map Flat File Source Component Output Columns to Ole Db Destination Input Columns
                             foreach (IDTSVirtualInputColumn100 vColumn in oleDbDestinationVirtualInputColumns)
                             {
-                                var inputColumn = oleDbDestinationInstance.SetUsageType(oleDbDestinationInput.ID,
-                                    oleDbDestinationvInput, vColumn.LineageID, DTSUsageType.UT_READONLY);
-
-                                var externalColumn =
-                                    oleDbDestinationInput.ExternalMetadataColumnCollection[inputColumn.Name];
-
+                                var inputColumn = oleDbDestinationInstance.SetUsageType(oleDbDestinationInput.ID, oleDbDestinationvInput, vColumn.LineageID, DTSUsageType.UT_READONLY);
+                                var externalColumn =  oleDbDestinationInput.ExternalMetadataColumnCollection[inputColumn.Name];
                                 oleDbDestinationInstance.MapInputColumn(oleDbDestinationInput.ID, inputColumn.ID, externalColumn.ID);
                             }
                         }
@@ -295,18 +241,17 @@ namespace SSISPackageAutomation
                         Console.WriteLine("Saving Package...");
                         app.SaveToXml(dtsx.ToString(), package, null);
                     }
-                }
-
                 package.Dispose();
                 Console.WriteLine("Done");
-
                 Console.ReadLine();
             }
-            catch
+            catch (Exception ex)
             {
 
             }
 
         }
     }
+
+    
 }

@@ -1,74 +1,40 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
   DTS:refId="Package"
-  DTS:CreationDate="11/2/2017 9:58:23 PM"
-  DTS:CreationName="Microsoft.Package"
+  DTS:CreationDate="11/4/2017 12:50:42 PM"
+  DTS:CreationName="SSIS.Package.3"
   DTS:CreatorComputerName="L55R2PC2"
   DTS:CreatorName="RACKSPACE\vams3203"
-  DTS:DTSID="{AECE91E9-55EA-4C6C-82CD-36E6F5B54DF4}"
-  DTS:ExecutableType="Microsoft.Package"
-  DTS:LastModifiedProductVersion="12.0.4100.1"
+  DTS:DTSID="{6A9181C7-B688-40EE-899C-4509087E1E8E}"
+  DTS:ExecutableType="SSIS.Package.3"
+  DTS:LastModifiedProductVersion="11.0.6020.0"
   DTS:LocaleID="1033"
-  DTS:ObjectName="{AECE91E9-55EA-4C6C-82CD-36E6F5B54DF4}"
-  DTS:VersionBuild="1"
-  DTS:VersionGUID="{3EF5DD1A-DB4C-4EB5-9038-F0E55CFFD84E}">
+  DTS:ObjectName="{6A9181C7-B688-40EE-899C-4509087E1E8E}"
+  DTS:ProtectionLevel="0"
+  DTS:VersionGUID="{BC25C8D7-9F17-4538-837E-E3BF24D5010E}">
   <DTS:Property
-    DTS:Name="PackageFormatVersion">8</DTS:Property>
+    DTS:Name="PackageFormatVersion">6</DTS:Property>
   <DTS:ConnectionManagers>
-    <DTS:ConnectionManager
-      DTS:refId="Package.ConnectionManagers[My Import File Connection]"
-      DTS:CreationName="FLATFILE"
-      DTS:Description="Flat File Connection"
-      DTS:DTSID="{17773047-87DD-4CEB-8D28-4591A840DC2D}"
-      DTS:ObjectName="My Import File Connection">
-      <DTS:ObjectData>
-        <DTS:ConnectionManager
-          DTS:Format=""
-          DTS:LocaleID="1033"
-          DTS:HeaderRowDelimiter=""
-          DTS:ColumnNamesInFirstDataRow="True"
-          DTS:RowDelimiter="_x000D__x000A_"
-          DTS:TextQualifier=""
-          DTS:CodePage="1252"
-          DTS:ConnectionString="C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\FILELOCATION\SAMPLEINPUT.txt">
-          <DTS:FlatFileColumns>
-            <DTS:FlatFileColumn
-              DTS:ColumnType="Delimited"
-              DTS:ColumnDelimiter="_x0009_"
-              DTS:ColumnWidth="255"
-              DTS:DataType="130"
-              DTS:ObjectName="ID"
-              DTS:DTSID="{F4B0EA0F-16CF-4A7C-AD47-CE8FF137BED2}"
-              DTS:CreationName="" />
-            <DTS:FlatFileColumn
-              DTS:ColumnType="Delimited"
-              DTS:ColumnDelimiter="_x0009_"
-              DTS:ColumnWidth="255"
-              DTS:DataType="130"
-              DTS:ObjectName="COLUMN1"
-              DTS:DTSID="{A28897EE-92C0-4C34-A0E0-55369573C545}"
-              DTS:CreationName="" />
-            <DTS:FlatFileColumn
-              DTS:ColumnType="Delimited"
-              DTS:ColumnDelimiter="_x000D__x000A_"
-              DTS:ColumnWidth="255"
-              DTS:DataType="130"
-              DTS:ObjectName="COLUMN2"
-              DTS:DTSID="{FC8C6D4B-2769-4071-9661-4998B968F365}"
-              DTS:CreationName="" />
-          </DTS:FlatFileColumns>
-        </DTS:ConnectionManager>
-      </DTS:ObjectData>
-    </DTS:ConnectionManager>
     <DTS:ConnectionManager
       DTS:refId="Package.ConnectionManagers[My OLE DB Connection]"
       DTS:CreationName="OLEDB"
       DTS:Description="OLE DB connection"
-      DTS:DTSID="{02AC292A-51E8-4A98-B758-96C145C832BC}"
+      DTS:DTSID="{893744C6-A427-45DB-9B68-F79D25BD76BD}"
       DTS:ObjectName="My OLE DB Connection">
       <DTS:ObjectData>
         <DTS:ConnectionManager
           DTS:ConnectionString="Data Source=ebi-etl-dev-01;Initial Catalog=LDAP;Provider=SQLOLEDB.1;Integrated Security=SSPI;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
+      DTS:CreationName="ODBC"
+      DTS:Description="OLE DB connection to the PostGreSQL Database"
+      DTS:DTSID="{7BB2AF20-2082-4AE7-9090-DF49109A8638}"
+      DTS:ObjectName="SSIS Connection Manager for ODBC to connect POSTGRESQL">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="server=localhost;uid=vams3203;Dsn=PostgreSQL35W;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
   </DTS:ConnectionManagers>
@@ -76,9 +42,9 @@
   <DTS:Executables>
     <DTS:Executable
       DTS:refId="Package\MyDataFlowTask"
-      DTS:CreationName="Microsoft.Pipeline"
-      DTS:DTSID="{F9F5D212-213E-4627-98BC-A58C3F1F8F2E}"
-      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:CreationName="SSIS.Pipeline.3"
+      DTS:DTSID="{6282A326-A78F-4ACE-965C-C2F2DE1C2BD7}"
+      DTS:ExecutableType="SSIS.Pipeline.3"
       DTS:LocaleID="-1"
       DTS:ObjectName="MyDataFlowTask"
       DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) 2007 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
@@ -88,141 +54,105 @@
           version="1">
           <components>
             <component
-              refId="Package\MyDataFlowTask\Flat File Source"
-              componentClassID="Microsoft.FlatFileSource"
-              contactInfo="Flat File Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
-              description="Flat File Source"
-              localeId="1033"
-              name="Flat File Source"
+              refId="Package\MyDataFlowTask\ODBC Source"
+              componentClassID="{A77F5655-A006-443A-9B7E-90B6BD55CB84}"
+              contactInfo="ODBC Source;Connector for Open Database Connectivity (ODBC) by Attunity; Attunity Ltd.; All Rights Reserved; http://www.attunity.com;1"
+              description="ODBC Source"
+              name="ODBC Source"
               usesDispositions="true"
               version="1">
               <properties>
                 <property
-                  dataType="System.Boolean"
-                  description="Specifies whether zero-length columns are treated as null."
-                  name="RetainNulls">false</property>
+                  dataType="System.String"
+                  description="The name of the table to be fetched."
+                  expressionType="Notify"
+                  name="TableName"></property>
                 <property
                   dataType="System.String"
-                  description="Specifies the name of an output column containing the file name. If no name is specified, no output column containing the file name will be generated."
-                  name="FileNameColumnName"></property>
+                  description="The SQL command to be executed."
+                  expressionType="Notify"
+                  name="SqlCommand"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specify the number of rows fetched per batch."
+                  expressionType="Notify"
+                  name="BatchSize">1000</property>
+                <property
+                  dataType="System.Int32"
+                  description="Determines the chunk size allocation for LOB columns"
+                  expressionType="Notify"
+                  name="LobChunkSize">32768</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Determines how the component exposes CHAR columns. If False, CHAR columns are exposed as (multi-)byte strings (DT_STR), if True, CHAR columns are exposed as wide strings (DT_WSTR)"
+                  expressionType="Notify"
+                  name="ExposeCharColumnsAsUnicode">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds to wait for an SQL statement to execute before returning to the application."
+                  expressionType="Notify"
+                  name="StatementTimeout">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="The code page to use when code page information is unavailable from the data source."
+                  expressionType="Notify"
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Int32"
+                  description="The mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="The method used for fetching data."
+                  expressionType="Notify"
+                  name="FetchMethod"
+                  typeConverter="FetchMethod">1</property>
+                <property
+                  dataType="System.Int32"
+                  description="The ODBC C data type for binding numeric data."
+                  expressionType="Notify"
+                  name="BindNumericAs"
+                  typeConverter="BindNumericAs">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Determines how the component would bind columns of (multi)-byte string types (i.e., SQL_CHAR, SQL_VARCHAR, SQL_LONGVARCHAR). The options are: Unicode (SQL_C_WCHAR) and ANSI (SQL_C_CHAR)."
+                  expressionType="Notify"
+                  name="BindCharColumnsAs"
+                  typeConverter="BindCharColumnsAs">0</property>
               </properties>
               <connections>
                 <connection
-                  refId="Package\MyDataFlowTask\Flat File Source.Connections[FlatFileConnection]"
-                  connectionManagerID="Package.ConnectionManagers[My Import File Connection]"
-                  connectionManagerRefId="Package.ConnectionManagers[My Import File Connection]"
-                  name="FlatFileConnection" />
+                  refId="Package\MyDataFlowTask\ODBC Source.Connections[ODBCConnection]"
+                  connectionManagerID="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
+                  connectionManagerRefId="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
+                  description="The ODBC runtime connection"
+                  name="ODBCConnection" />
               </connections>
               <outputs>
                 <output
-                  refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output]"
-                  name="Flat File Source Output">
-                  <outputColumns>
-                    <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[ID]"
-                      dataType="wstr"
-                      errorOrTruncationOperation="Conversion"
-                      errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[ID]"
-                      length="255"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[ID]"
-                      name="ID"
-                      truncationRowDisposition="FailComponent">
-                      <properties>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                          name="FastParse">false</property>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the data is in binary format."
-                          name="UseBinaryFormat">false</property>
-                      </properties>
-                    </outputColumn>
-                    <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN1]"
-                      dataType="wstr"
-                      errorOrTruncationOperation="Conversion"
-                      errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[COLUMN1]"
-                      length="255"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN1]"
-                      name="COLUMN1"
-                      truncationRowDisposition="FailComponent">
-                      <properties>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                          name="FastParse">false</property>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the data is in binary format."
-                          name="UseBinaryFormat">false</property>
-                      </properties>
-                    </outputColumn>
-                    <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN2]"
-                      dataType="wstr"
-                      errorOrTruncationOperation="Conversion"
-                      errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[COLUMN2]"
-                      length="255"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN2]"
-                      name="COLUMN2"
-                      truncationRowDisposition="FailComponent">
-                      <properties>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                          name="FastParse">false</property>
-                        <property
-                          dataType="System.Boolean"
-                          description="Indicates whether the data is in binary format."
-                          name="UseBinaryFormat">false</property>
-                      </properties>
-                    </outputColumn>
-                  </outputColumns>
+                  refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output]"
+                  errorRowDisposition="FailComponent"
+                  name="ODBC Source Output"
+                  truncationRowDisposition="FailComponent">
                   <externalMetadataColumns
-                    isUsed="True">
-                    <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[ID]"
-                      dataType="wstr"
-                      length="255"
-                      name="ID" />
-                    <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[COLUMN1]"
-                      dataType="wstr"
-                      length="255"
-                      name="COLUMN1" />
-                    <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].ExternalColumns[COLUMN2]"
-                      dataType="wstr"
-                      length="255"
-                      name="COLUMN2" />
-                  </externalMetadataColumns>
+                    isUsed="True" />
                 </output>
                 <output
-                  refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output]"
+                  refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output]"
                   isErrorOut="true"
-                  name="Flat File Source Error Output">
+                  name="ODBC Source Error Output">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[Flat File Source Error Output Column]"
-                      codePage="1252"
-                      dataType="text"
-                      description="Flat File Source Error Output Column"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[Flat File Source Error Output Column]"
-                      name="Flat File Source Error Output Column" />
-                    <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[ErrorCode]"
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[ErrorCode]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[ErrorColumn]"
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                   </outputColumns>
@@ -232,7 +162,7 @@
             </component>
             <component
               refId="Package\MyDataFlowTask\OLE DB Destination"
-              componentClassID="Microsoft.OLEDBDestination"
+              componentClassID="{4ADA7EAA-136C-4215-8098-D7A7C27FC0D1}"
               contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
               description="OLE DB Destination"
               name="OLE DB Destination"
@@ -246,7 +176,7 @@
                 <property
                   dataType="System.String"
                   description="Specifies the name of the database object used to open a rowset."
-                  name="OpenRowset">SAMPLEINPUT</property>
+                  name="OpenRowset">Products</property>
                 <property
                   dataType="System.String"
                   description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -255,7 +185,7 @@
                   dataType="System.String"
                   description="The SQL command to be executed."
                   name="SqlCommand"
-                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91"></property>
                 <property
                   dataType="System.Int32"
                   description="Specifies the column code page to use when code page information is unavailable from the data source."
@@ -301,46 +231,22 @@
                   errorRowDisposition="FailComponent"
                   hasSideEffects="true"
                   name="OLE DB Destination Input">
-                  <inputColumns>
-                    <inputColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[ID]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="ID"
-                      externalMetadataColumnId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ID]"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[ID]" />
-                    <inputColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[COLUMN1]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="COLUMN1"
-                      externalMetadataColumnId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COLUMN1]"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN1]" />
-                    <inputColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[COLUMN2]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="COLUMN2"
-                      externalMetadataColumnId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COLUMN2]"
-                      lineageId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output].Columns[COLUMN2]" />
-                  </inputColumns>
                   <externalMetadataColumns
                     isUsed="True">
                     <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ID]"
-                      dataType="wstr"
-                      length="255"
-                      name="ID" />
+                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[product_no]"
+                      dataType="i4"
+                      name="product_no" />
                     <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COLUMN1]"
+                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[name]"
                       dataType="wstr"
                       length="255"
-                      name="COLUMN1" />
+                      name="name" />
                     <externalMetadataColumn
-                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COLUMN2]"
+                      refId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[price]"
                       dataType="wstr"
                       length="255"
-                      name="COLUMN2" />
+                      name="price" />
                   </externalMetadataColumns>
                 </input>
               </inputs>
@@ -372,71 +278,13 @@
           </components>
           <paths>
             <path
-              refId="Package\MyDataFlowTask.Paths[Flat File Source Output]"
+              refId="Package\MyDataFlowTask.Paths[ODBC Source Output]"
               endId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input]"
-              name="Flat File Source Output"
-              startId="Package\MyDataFlowTask\Flat File Source.Outputs[Flat File Source Output]" />
+              name="ODBC Source Output"
+              startId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output]" />
           </paths>
         </pipeline>
       </DTS:ObjectData>
     </DTS:Executable>
   </DTS:Executables>
-  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
-<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
-<!--If you manually edit this section and make a mistake, you can delete it. -->
-<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
-<Objects
-  Version="sql12">
-  <!--Each node below will contain properties that do not affect runtime behavior.-->
-  <Package
-    design-time-name="Package">
-    <LayoutInfo>
-      <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
-        <NodeLayout
-          Size="158,42"
-          Id="Package\MyDataFlowTask"
-          TopLeft="255.5,180.5" />
-      </GraphLayout>
-    </LayoutInfo>
-  </Package>
-  <TaskHost
-    design-time-name="Package\MyDataFlowTask">
-    <LayoutInfo>
-      <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
-        <NodeLayout
-          Size="171,42"
-          Id="Package\MyDataFlowTask\OLE DB Destination"
-          TopLeft="218.5,227.5" />
-        <NodeLayout
-          Size="151,42"
-          Id="Package\MyDataFlowTask\Flat File Source"
-          TopLeft="228.5,125.5" />
-        <EdgeLayout
-          Id="Package\MyDataFlowTask.Paths[Flat File Source Output]"
-          TopLeft="304,167.5">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,60"
-              Start="0,0"
-              End="0,52.5">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,52.5" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-      </GraphLayout>
-    </LayoutInfo>
-  </TaskHost>
-</Objects>]]></DTS:DesignTimeProperties>
 </DTS:Executable>
