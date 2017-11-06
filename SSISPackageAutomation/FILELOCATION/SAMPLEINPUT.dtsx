@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
   DTS:refId="Package"
-  DTS:CreationDate="11/4/2017 12:50:42 PM"
+  DTS:CreationDate="11/6/2017 2:03:31 PM"
   DTS:CreationName="SSIS.Package.3"
   DTS:CreatorComputerName="L55R2PC2"
   DTS:CreatorName="RACKSPACE\vams3203"
-  DTS:DTSID="{6A9181C7-B688-40EE-899C-4509087E1E8E}"
+  DTS:DTSID="{826E85A8-5969-461D-B9A8-DDD2683B0735}"
   DTS:ExecutableType="SSIS.Package.3"
   DTS:LastModifiedProductVersion="11.0.6020.0"
   DTS:LocaleID="1033"
-  DTS:ObjectName="{6A9181C7-B688-40EE-899C-4509087E1E8E}"
+  DTS:ObjectName="{826E85A8-5969-461D-B9A8-DDD2683B0735}"
   DTS:ProtectionLevel="0"
-  DTS:VersionGUID="{BC25C8D7-9F17-4538-837E-E3BF24D5010E}">
+  DTS:VersionGUID="{C88212A3-3CD8-40AC-A71E-3E666B2A26F8}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">6</DTS:Property>
   <DTS:ConnectionManagers>
@@ -19,7 +19,7 @@
       DTS:refId="Package.ConnectionManagers[My OLE DB Connection]"
       DTS:CreationName="OLEDB"
       DTS:Description="OLE DB connection"
-      DTS:DTSID="{893744C6-A427-45DB-9B68-F79D25BD76BD}"
+      DTS:DTSID="{E541B012-3A62-46E1-A970-A87B7977470D}"
       DTS:ObjectName="My OLE DB Connection">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -30,7 +30,7 @@
       DTS:refId="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
       DTS:CreationName="ODBC"
       DTS:Description="OLE DB connection to the PostGreSQL Database"
-      DTS:DTSID="{7BB2AF20-2082-4AE7-9090-DF49109A8638}"
+      DTS:DTSID="{B8E7699D-5059-47B0-8BE7-010C9264B997}"
       DTS:ObjectName="SSIS Connection Manager for ODBC to connect POSTGRESQL">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -43,7 +43,7 @@
     <DTS:Executable
       DTS:refId="Package\MyDataFlowTask"
       DTS:CreationName="SSIS.Pipeline.3"
-      DTS:DTSID="{6282A326-A78F-4ACE-965C-C2F2DE1C2BD7}"
+      DTS:DTSID="{0BF916E1-1B98-490D-AF32-C3BA534700CC}"
       DTS:ExecutableType="SSIS.Pipeline.3"
       DTS:LocaleID="-1"
       DTS:ObjectName="MyDataFlowTask"
@@ -53,6 +53,82 @@
         <pipeline
           version="1">
           <components>
+            <component
+              refId="Package\MyDataFlowTask\Data Conversion"
+              componentClassID="{62B1106C-7DB8-4EC8-ADD6-4C664DFFC54A}"
+              contactInfo="Data Conversion;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
+              description="Data Conversion"
+              name="Data Conversion"
+              usesDispositions="true">
+              <inputs>
+                <input
+                  refId="Package\MyDataFlowTask\Data Conversion.Inputs[Data Conversion Input]"
+                  name="Data Conversion Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\MyDataFlowTask\Data Conversion.Inputs[Data Conversion Input].Columns[name]"
+                      cachedDataType="nText"
+                      cachedName="name"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[name]" />
+                  </inputColumns>
+                  <externalMetadataColumns />
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Output]"
+                  exclusionGroup="1"
+                  name="Data Conversion Output"
+                  synchronousInputId="Package\MyDataFlowTask\Data Conversion.Inputs[Data Conversion Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Output].Columns[name_nvarchar]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      length="255"
+                      lineageId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Output].Columns[name_nvarchar]"
+                      name="name_nvarchar"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[name]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="Data Conversion Error Output"
+                  synchronousInputId="Package\MyDataFlowTask\Data Conversion.Inputs[Data Conversion Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
             <component
               refId="Package\MyDataFlowTask\ODBC Source"
               componentClassID="{A77F5655-A006-443A-9B7E-90B6BD55CB84}"
@@ -71,7 +147,7 @@
                   dataType="System.String"
                   description="The SQL command to be executed."
                   expressionType="Notify"
-                  name="SqlCommand"></property>
+                  name="SqlCommand">SELECT * FROM PRODUCTS</property>
                 <property
                   dataType="System.Int32"
                   description="Specify the number of rows fetched per batch."
@@ -101,7 +177,7 @@
                   dataType="System.Int32"
                   description="The mode used to access the database."
                   name="AccessMode"
-                  typeConverter="AccessMode">0</property>
+                  typeConverter="AccessMode">2</property>
                 <property
                   dataType="System.Int32"
                   description="The method used for fetching data."
@@ -135,14 +211,71 @@
                   errorRowDisposition="FailComponent"
                   name="ODBC Source Output"
                   truncationRowDisposition="FailComponent">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[product_no]"
+                      dataType="i4"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[product_no]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[product_no]"
+                      name="product_no" />
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[name]"
+                      dataType="nText"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[name]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[name]"
+                      name="name" />
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[price]"
+                      dataType="numeric"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[price]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].Columns[price]"
+                      name="price"
+                      precision="28"
+                      scale="6" />
+                  </outputColumns>
                   <externalMetadataColumns
-                    isUsed="True" />
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[product_no]"
+                      dataType="i4"
+                      name="product_no" />
+                    <externalMetadataColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[name]"
+                      dataType="nText"
+                      name="name" />
+                    <externalMetadataColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[price]"
+                      dataType="numeric"
+                      name="price"
+                      precision="28"
+                      scale="6" />
+                  </externalMetadataColumns>
                 </output>
                 <output
                   refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output]"
                   isErrorOut="true"
                   name="ODBC Source Error Output">
                   <outputColumns>
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[product_no]"
+                      dataType="i4"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[product_no]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[product_no]"
+                      name="product_no" />
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[name]"
+                      dataType="nText"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[name]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[name]"
+                      name="name" />
+                    <outputColumn
+                      refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[price]"
+                      dataType="numeric"
+                      externalMetadataColumnId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[price]"
+                      lineageId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[price]"
+                      name="price"
+                      precision="28"
+                      scale="6" />
                     <outputColumn
                       refId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
                       dataType="i4"
@@ -278,8 +411,13 @@
           </components>
           <paths>
             <path
-              refId="Package\MyDataFlowTask.Paths[ODBC Source Output]"
+              refId="Package\MyDataFlowTask.Paths[Data Conversion Output]"
               endId="Package\MyDataFlowTask\OLE DB Destination.Inputs[OLE DB Destination Input]"
+              name="Data Conversion Output"
+              startId="Package\MyDataFlowTask\Data Conversion.Outputs[Data Conversion Output]" />
+            <path
+              refId="Package\MyDataFlowTask.Paths[ODBC Source Output]"
+              endId="Package\MyDataFlowTask\Data Conversion.Inputs[Data Conversion Input]"
               name="ODBC Source Output"
               startId="Package\MyDataFlowTask\ODBC Source.Outputs[ODBC Source Output]" />
           </paths>

@@ -167,7 +167,7 @@ namespace SSISPackageAutomation
                             // Add a Flat ODBC Source Component to the Data Flow Task
                             var ODBCSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
                             ODBCSourceComponent.Name = "My PostgreSQL Component";
-                            ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName;
+                            ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName;// "A77F5655-A006-443A-9B7E-90B6BD55CB84";//"DTSAdapter.ODBCSource";//app.PipelineComponentInfos["ODBC"].CreationName;
 
                             // Get the design time instance of the ODBC Source Component
                             var ODBCSourceInstance = ODBCSourceComponent.Instantiate();
@@ -175,13 +175,42 @@ namespace SSISPackageAutomation
 
                             ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(ConMgr);
                             ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = ConMgr.ID;
+                            ODBCSourceInstance.SetComponentProperty("AccessMode", 2);
+                            ODBCSourceInstance.SetComponentProperty("SqlCommand", "SELECT * FROM PRODUCTS");
+                         //ODBCSourceInstance.
 
-                            ODBCSourceInstance.SetComponentProperty("OpenRowset", "PUBLIC.PRODUCTS");
-
-                            // Reinitialize the metadata.
+                         // Reinitialize the metadata.
                             ODBCSourceInstance.AcquireConnections(null);
                             ODBCSourceInstance.ReinitializeMetaData();
                             ODBCSourceInstance.ReleaseConnections();
+                     
+                        // Add transform (DFT)
+                            IDTSComponentMetaData100 dataConvertComponent = dataFlowTask.ComponentMetaDataCollection.New();
+                            dataConvertComponent.ComponentClassID = "DTSTransform.DataConvert";
+                            dataConvertComponent.Name = "Data Convert";
+                            dataConvertComponent.Description = "Data Conversion Component";
+
+                            CManagedComponentWrapper dataConvertWrapper = dataConvertComponent.Instantiate();
+                            dataConvertWrapper.ProvideComponentProperties();
+
+                         // Connect the source and the transform
+                             dataFlowTask.PathCollection.New().AttachPathAndPropagateNotifications(ODBCSourceComponent.OutputCollection[0],dataConvertComponent.InputCollection[0]);
+
+                         //
+                         // Configure the transform
+                         //
+
+                            IDTSVirtualInput100 dataConvertVirtualInput = dataConvertComponent.InputCollection[0].GetVirtualInput();
+                            IDTSOutput100 dataConvertOutput = dataConvertComponent.OutputCollection[0];
+                            IDTSOutputColumnCollection100 dataConvertOutputColumns = dataConvertOutput.OutputColumnCollection;
+
+                            int sourceColumnLineageId = dataConvertVirtualInput.VirtualInputColumnCollection["name"].LineageID;  
+                            dataConvertWrapper.SetUsageType(dataConvertComponent.InputCollection[0].ID,dataConvertVirtualInput,sourceColumnLineageId,DTSUsageType.UT_READONLY);
+                            IDTSOutputColumn100 newOutputColumn = dataConvertWrapper.InsertOutputColumnAt(dataConvertOutput.ID, 0, "name_nvarchar", string.Empty);
+                            newOutputColumn.SetDataTypeProperties(Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType.DT_WSTR, 255, 0, 0, 0);
+                            newOutputColumn.MappedColumnID = 0;
+
+                            dataConvertWrapper.SetOutputColumnProperty( dataConvertOutput.ID, newOutputColumn.ID, "SourceInputColumnLineageID", sourceColumnLineageId);
 
                             // Add an OLE DB Destination Component to the Data Flow
                             var oleDbDestinationComponent = dataFlowTask.ComponentMetaDataCollection.New();
@@ -192,44 +221,35 @@ namespace SSISPackageAutomation
                             var oleDbDestinationInstance = oleDbDestinationComponent.Instantiate();
                             oleDbDestinationInstance.ProvideComponentProperties();
 
-                        // Set Ole Db Destination Connection
+                            // Set Ole Db Destination Connection
                             oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManagerID = connMgrOleDb.ID;
                             oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(connMgrOleDb);
 
-                        // Set destination load type
+                            // Set destination load type
                             oleDbDestinationInstance.SetComponentProperty("AccessMode", 3);
 
-                         // Now set Ole Db Destination Table name
-                           oleDbDestinationInstance.SetComponentProperty("OpenRowset", "Products");
+                            // Now set Ole Db Destination Table name
+                            oleDbDestinationInstance.SetComponentProperty("OpenRowset", "Products");
 
-                         // Create a Precedence Constraint between Flat File Source and OLEDB Destination Components
-                            var path = dataFlowTask.PathCollection.New();
-                            path.AttachPathAndPropagateNotifications(ODBCSourceComponent.OutputCollection[0], oleDbDestinationComponent.InputCollection[0]);
-
-                         //CREATE A DATA CONVERSION
-                            //IDTSComponentMetaData100 conversionDataFlowComponent = dataFlowTask.ComponentMetaDataCollection.New();// creating data conversion 
-                            //conversionDataFlowComponent.ComponentClassID = "{C3BF62C8-7C5C-4F85-83C3-E0B6F6BE267C}";// This is the GUID for data conversion component
-                            //CManagedComponentWrapper conversionInstance = conversionDataFlowComponent.Instantiate();//Instantiate
-                            //conversionInstance.ProvideComponentProperties();
-
-                            //conversionDataFlowComponent.Name = "Conversion compoenent";
-                        
-                         // Get the list of available columns
+                            // Get the list of available columns
                             var oleDbDestinationInput = oleDbDestinationComponent.InputCollection[0];
                             var oleDbDestinationvInput = oleDbDestinationInput.GetVirtualInput();
-
                             var oleDbDestinationVirtualInputColumns = oleDbDestinationvInput.VirtualInputColumnCollection;
 
-                         // Reinitialize the metadata
+                            // Create a Precedence Constraint between Data conversion component and OLEDB Destination Components
+                            var path = dataFlowTask.PathCollection.New();
+                            path.AttachPathAndPropagateNotifications(dataConvertComponent.OutputCollection[0], oleDbDestinationComponent.InputCollection[0]);
+
+                            // Reinitialize the metadata
                             oleDbDestinationInstance.AcquireConnections(null);
                             oleDbDestinationInstance.ReinitializeMetaData();
                             oleDbDestinationInstance.ReleaseConnections();
 
-                         // Map Flat File Source Component Output Columns to Ole Db Destination Input Columns
+                            // Map Flat File Source Component Output Columns to Ole Db Destination Input Columns
                             foreach (IDTSVirtualInputColumn100 vColumn in oleDbDestinationVirtualInputColumns)
                             {
                                 var inputColumn = oleDbDestinationInstance.SetUsageType(oleDbDestinationInput.ID, oleDbDestinationvInput, vColumn.LineageID, DTSUsageType.UT_READONLY);
-                                var externalColumn =  oleDbDestinationInput.ExternalMetadataColumnCollection[inputColumn.Name];
+                                var externalColumn = oleDbDestinationInput.ExternalMetadataColumnCollection[inputColumn.Name];
                                 oleDbDestinationInstance.MapInputColumn(oleDbDestinationInput.ID, inputColumn.ID, externalColumn.ID);
                             }
                         }
