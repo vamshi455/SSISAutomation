@@ -72,6 +72,7 @@ namespace SSISPackageAutomation
 
                 //sqlselect.Replace("", "");
                 //sqlselect.Replace("System.Int32", "INT");
+                //afdsf
 
 
                 var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "LDAP"));
