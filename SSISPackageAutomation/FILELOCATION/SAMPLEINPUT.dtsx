@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
   DTS:refId="Package"
-  DTS:CreationDate="11/6/2017 2:03:31 PM"
+  DTS:CreationDate="11/6/2017 2:40:15 PM"
   DTS:CreationName="SSIS.Package.3"
   DTS:CreatorComputerName="L55R2PC2"
   DTS:CreatorName="RACKSPACE\vams3203"
-  DTS:DTSID="{826E85A8-5969-461D-B9A8-DDD2683B0735}"
+  DTS:DTSID="{1C4B4648-1EFB-4C24-87AE-83B02135A289}"
   DTS:ExecutableType="SSIS.Package.3"
   DTS:LastModifiedProductVersion="11.0.6020.0"
   DTS:LocaleID="1033"
-  DTS:ObjectName="{826E85A8-5969-461D-B9A8-DDD2683B0735}"
+  DTS:ObjectName="{1C4B4648-1EFB-4C24-87AE-83B02135A289}"
   DTS:ProtectionLevel="0"
-  DTS:VersionGUID="{C88212A3-3CD8-40AC-A71E-3E666B2A26F8}">
+  DTS:VersionGUID="{0EB7FC2A-F27E-4A25-B000-87886E52DEEB}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">6</DTS:Property>
   <DTS:ConnectionManagers>
@@ -19,7 +19,7 @@
       DTS:refId="Package.ConnectionManagers[My OLE DB Connection]"
       DTS:CreationName="OLEDB"
       DTS:Description="OLE DB connection"
-      DTS:DTSID="{E541B012-3A62-46E1-A970-A87B7977470D}"
+      DTS:DTSID="{0BC0B5CD-0E2A-4CDB-ABC2-C57A9E419986}"
       DTS:ObjectName="My OLE DB Connection">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -30,7 +30,7 @@
       DTS:refId="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
       DTS:CreationName="ODBC"
       DTS:Description="OLE DB connection to the PostGreSQL Database"
-      DTS:DTSID="{B8E7699D-5059-47B0-8BE7-010C9264B997}"
+      DTS:DTSID="{1890987E-0951-4E52-963C-32BFBAEF64C6}"
       DTS:ObjectName="SSIS Connection Manager for ODBC to connect POSTGRESQL">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -43,7 +43,7 @@
     <DTS:Executable
       DTS:refId="Package\MyDataFlowTask"
       DTS:CreationName="SSIS.Pipeline.3"
-      DTS:DTSID="{0BF916E1-1B98-490D-AF32-C3BA534700CC}"
+      DTS:DTSID="{30C864D0-8719-492A-811D-482C673F7379}"
       DTS:ExecutableType="SSIS.Pipeline.3"
       DTS:LocaleID="-1"
       DTS:ObjectName="MyDataFlowTask"

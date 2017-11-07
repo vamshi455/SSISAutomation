@@ -164,14 +164,14 @@ namespace SSISPackageAutomation
 
                         if (dataFlowTask != null)
                         {
-                            // Add a Flat ODBC Source Component to the Data Flow Task
+                        // Add a Flat ODBC Source Component to the Data Flow Task
+
                             var ODBCSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
                             ODBCSourceComponent.Name = "My PostgreSQL Component";
                             ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName;// "A77F5655-A006-443A-9B7E-90B6BD55CB84";//"DTSAdapter.ODBCSource";//app.PipelineComponentInfos["ODBC"].CreationName;
-
-                            // Get the design time instance of the ODBC Source Component
                             var ODBCSourceInstance = ODBCSourceComponent.Instantiate();
                             ODBCSourceInstance.ProvideComponentProperties();
+
 
                             ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(ConMgr);
                             ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = ConMgr.ID;
@@ -184,7 +184,7 @@ namespace SSISPackageAutomation
                             ODBCSourceInstance.ReinitializeMetaData();
                             ODBCSourceInstance.ReleaseConnections();
                      
-                        // Add transform (DFT)
+                         // Add transform (DFT)
                             IDTSComponentMetaData100 dataConvertComponent = dataFlowTask.ComponentMetaDataCollection.New();
                             dataConvertComponent.ComponentClassID = "DTSTransform.DataConvert";
                             dataConvertComponent.Name = "Data Convert";
@@ -204,6 +204,14 @@ namespace SSISPackageAutomation
                             IDTSOutput100 dataConvertOutput = dataConvertComponent.OutputCollection[0];
                             IDTSOutputColumnCollection100 dataConvertOutputColumns = dataConvertOutput.OutputColumnCollection;
 
+                        //loop through ODBCSourceComponent.OutputCollection[0] FIND THE COLUMNS WHICH NEEDS CONVERSION
+                            foreach (IDTSVirtualInputColumn100 vColumn in dataConvertVirtualInput.VirtualInputColumnCollection)
+                            {
+                             
+                                
+                            }
+
+                        //only one column datatype is considered
                             int sourceColumnLineageId = dataConvertVirtualInput.VirtualInputColumnCollection["name"].LineageID;  
                             dataConvertWrapper.SetUsageType(dataConvertComponent.InputCollection[0].ID,dataConvertVirtualInput,sourceColumnLineageId,DTSUsageType.UT_READONLY);
                             IDTSOutputColumn100 newOutputColumn = dataConvertWrapper.InsertOutputColumnAt(dataConvertOutput.ID, 0, "name_nvarchar", string.Empty);
@@ -270,7 +278,20 @@ namespace SSISPackageAutomation
             {
 
             }
+        }
 
+        public IDTSComponentMetaData100 AddComponentToDataFlow(MainPipe mp, string Component)
+        {
+            if (mp != null)
+            {
+                IDTSComponentMetaData100 md = mp.ComponentMetaDataCollection.New();
+                md.ComponentClassID = Component;
+                CManagedComponentWrapper wrp = md.Instantiate();
+                wrp.ProvideComponentProperties();
+
+                return md;
+            }
+            throw new Exception("DataFlow task does not exist.");
         }
     }
 
