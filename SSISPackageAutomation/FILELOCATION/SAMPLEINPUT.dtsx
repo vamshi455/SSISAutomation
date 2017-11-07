@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
   DTS:refId="Package"
+<<<<<<< HEAD
   DTS:CreationDate="11/7/2017 7:15:52 AM"
   DTS:CreationName="SSIS.Package.3"
   DTS:CreatorComputerName="L55R2PC2"
@@ -12,6 +13,19 @@
   DTS:ObjectName="{54CBEDC0-0F4E-4B61-A610-120A951D94B3}"
   DTS:ProtectionLevel="0"
   DTS:VersionGUID="{36C72C69-FE9D-4B6E-9DDE-6279E11CD787}">
+=======
+  DTS:CreationDate="11/6/2017 2:40:15 PM"
+  DTS:CreationName="SSIS.Package.3"
+  DTS:CreatorComputerName="L55R2PC2"
+  DTS:CreatorName="RACKSPACE\vams3203"
+  DTS:DTSID="{1C4B4648-1EFB-4C24-87AE-83B02135A289}"
+  DTS:ExecutableType="SSIS.Package.3"
+  DTS:LastModifiedProductVersion="11.0.6020.0"
+  DTS:LocaleID="1033"
+  DTS:ObjectName="{1C4B4648-1EFB-4C24-87AE-83B02135A289}"
+  DTS:ProtectionLevel="0"
+  DTS:VersionGUID="{0EB7FC2A-F27E-4A25-B000-87886E52DEEB}">
+>>>>>>> 0313f00ea31b050bcf8aeffa48f2acef87bfe36a
   <DTS:Property
     DTS:Name="PackageFormatVersion">6</DTS:Property>
   <DTS:ConnectionManagers>
@@ -19,7 +33,11 @@
       DTS:refId="Package.ConnectionManagers[My OLE DB Connection]"
       DTS:CreationName="OLEDB"
       DTS:Description="OLE DB connection"
+<<<<<<< HEAD
       DTS:DTSID="{B86B992C-FFEE-4C67-A205-D95C450AB256}"
+=======
+      DTS:DTSID="{0BC0B5CD-0E2A-4CDB-ABC2-C57A9E419986}"
+>>>>>>> 0313f00ea31b050bcf8aeffa48f2acef87bfe36a
       DTS:ObjectName="My OLE DB Connection">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -30,7 +48,11 @@
       DTS:refId="Package.ConnectionManagers[SSIS Connection Manager for ODBC to connect POSTGRESQL]"
       DTS:CreationName="ODBC"
       DTS:Description="OLE DB connection to the PostGreSQL Database"
+<<<<<<< HEAD
       DTS:DTSID="{EDAB81F3-056D-4A64-A5CA-19766DA3A1DD}"
+=======
+      DTS:DTSID="{1890987E-0951-4E52-963C-32BFBAEF64C6}"
+>>>>>>> 0313f00ea31b050bcf8aeffa48f2acef87bfe36a
       DTS:ObjectName="SSIS Connection Manager for ODBC to connect POSTGRESQL">
       <DTS:ObjectData>
         <DTS:ConnectionManager
@@ -43,7 +65,11 @@
     <DTS:Executable
       DTS:refId="Package\MyDataFlowTask"
       DTS:CreationName="SSIS.Pipeline.3"
+<<<<<<< HEAD
       DTS:DTSID="{BC2967D2-ECEA-4055-91DC-A408E4012F83}"
+=======
+      DTS:DTSID="{30C864D0-8719-492A-811D-482C673F7379}"
+>>>>>>> 0313f00ea31b050bcf8aeffa48f2acef87bfe36a
       DTS:ExecutableType="SSIS.Pipeline.3"
       DTS:LocaleID="-1"
       DTS:ObjectName="MyDataFlowTask"
