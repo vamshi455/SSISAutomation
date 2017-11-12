@@ -1,31 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.SqlServer.Dts.Runtime;
 using Microsoft.SqlServer.Dts.Pipeline.Wrapper;
-using System.Data.SqlClient;
-using System.Xml;
 using System.Data.OleDb;
-using System.Collections;
-using System.Configuration;
 using System.Data;
-using System.Linq;
-using System.Web;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
-using System.Runtime.InteropServices;
-using System.ComponentModel;
-using System.Globalization;
 using System.Reflection;
-using System.Data.SqlClient;
-using System.IO;
-using Microsoft.SqlServer.Dts.Runtime;
-using PipeLineWrapper = Microsoft.SqlServer.Dts.Pipeline.Wrapper;
-using RuntimeWrapper = Microsoft.SqlServer.Dts.Runtime.Wrapper;
-using MSExcel = Microsoft.Office.Interop.Excel;
-using Microsoft.SqlServer.Dts.Pipeline;
-
+using Wrapper = Microsoft.SqlServer.Dts.Runtime.Wrapper;
 
 /// <summary>
 /// Summary description for CreateAndExecutePackage
@@ -34,7 +14,7 @@ public class WorkingExample
 {
     //Check column names from the template. 
     //DataSet dsData = ds.Clone();
-    public static readonly string ExcelConnectionString = ConfigurationManager.AppSettings["ExcelConn"].ToString();
+    public static readonly string ExcelConnectionString = "";
     //Database Table
     DataTable dtDBTable;
     DataTable dtSetDataTypeProperties = new DataTable();
@@ -48,7 +28,7 @@ public class WorkingExample
         DataTable dtExcelFields = new DataTable();
         dtExcelFields.Columns.Add("ExcelFields", typeof(string));
         dtExcelFields.Columns.Add("DataType", typeof(string));
-        DataSet dsTemplate = GetExcelData(@"E:\iPlan\Site work\SampleExcelFiles\India.xls");
+        DataSet dsTemplate = GetExcelData(@"C:\vamshi\SampleInput.xls");
         DataTable dt = dsTemplate.Tables[0];
         foreach (DataColumn dc in dt.Columns)
         {
@@ -93,7 +73,7 @@ public class WorkingExample
             //To Create a package named [Sample Package]
             Package package = new Package();
             package.Name = "Sample Package";
-            package.PackageType = DTSPackageType.DTSDesigner90;
+            package.PackageType = DTSPackageType.DTSDesigner;
             package.VersionBuild = 1;
 
             //To add package variables
@@ -103,17 +83,15 @@ public class WorkingExample
             Variable TransactionID = package.Variables.Add("TransactionID", false, "User", 0);
             TransactionID.Name = @"TransactionID";
 
-            Variable CurrentExcelPath = package.Variables.Add("CurrentExcelPath", false, "User", @"E:\iPlan\Site work\SampleExcelFiles\India");
+            Variable CurrentExcelPath = package.Variables.Add("CurrentExcelPath", false, "User", @"C:\vamshi");
             CurrentExcelPath.Name = @"CurrentExcelPath";
             //DataType will be automatically set to String
 
             //For source database (Excel)
             ConnectionManager ExcelSource = package.Connections.Add("EXCEL");
 
-
             //correct
             //ExcelSource.ConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:Site work\SampleExcelFiles\India.xls;Extended Properties=""EXCEL 8.0;HDR=YES"";";
-
             // Properties=\"EXCEL 8.0;HDR=YES;IMEX=1;\";"
             ExcelSource.ConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=+ @[User::CurrentExcelPath] +;Extended Properties=\""EXCEL 8.0;HDR=YES;IMEX=1\"";";
             //working//"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=D:\iPlan\Site work\SampleExcelFiles\India.xls;Extended Properties=""EXCEL 8.0;HDR=YES"";";
@@ -121,7 +99,6 @@ public class WorkingExample
             //working//ExcelSource.SetExpression("ConnectionString", @"""Provider=Microsoft.Jet.OLEDB.4.0;Data Source="" + @[User::CurrentExcelPath] + "";Extended Properties=\""Excel 8.0;HDR=Yes\""""");
             ExcelSource.SetExpression("ConnectionString", @"""Provider=Microsoft.Jet.OLEDB.4.0;Data Source="" + @[User::CurrentExcelPath] + "";Extended Properties=\""Excel 8.0;HDR=Yes;IMEX=1\""""");
             ExcelSource.DelayValidation = true;
-
 
             //For destination database (OLAP)SQLNCLI10 SQLNCLI10 SQLNCLI.1 
             ConnectionManager OLAP = package.Connections.Add("OLEDB");
@@ -138,11 +115,8 @@ public class WorkingExample
             //correct
             //OLAP.ConnectionString = @"Data Source=PASDTP196\SQLEXPRESS;Initial Catalog=AdventureWorks;Integrated Security=SSPI;";
 
-            OLAP.ConnectionString = @"Data Source=192.168.1.5;Initial Catalog=AdventureWorks;Provider=SQLOLEDB.1;Integrated Security=SSPI;";
+            OLAP.ConnectionString = @"Data Source=ebi-etl-dev-01;Initial Catalog=LDAP;Provider=SQLOLEDB.1;Integrated Security=SSPI;";
             OLAP.Name = "LocalHost.OLAP";
-
-
-
 
 
             //To add "Excel Sheet Iterator" (ForEach Loop container)
@@ -157,7 +131,7 @@ public class WorkingExample
 
             //FileEnumeratorHost.Properties["Directory"].SetValue(FileEnumeratorHost, @"C:\Site work\SampleExcelFiles");
 
-            FileEnumeratorHost.Properties["Directory"].SetValue(FileEnumeratorHost, @"E:\iPlan\Site work\SampleExcelFiles");
+            FileEnumeratorHost.Properties["Directory"].SetValue(FileEnumeratorHost, @"C:\vamshi");
             FileEnumeratorHost.Properties["FileSpec"].SetValue(FileEnumeratorHost, @"*.xls*");
             //0 = "Fully qualified" ; 1 = "Name and extension" ; 2 = "Name only"
             FileEnumeratorHost.Properties["FileNameRetrieval"].SetValue(FileEnumeratorHost, 0);
@@ -187,9 +161,8 @@ public class WorkingExample
             ConnectionManager DconMgr = package.Connections["LocalHost.OLAP"];
 
             // Create and configure an Excel source component. 
-            IDTSComponentMetaData90 source = dataFlowTask.ComponentMetaDataCollection.New();
+            IDTSComponentMetaData100 source = dataFlowTask.ComponentMetaDataCollection.New();
             source.ComponentClassID = "DTSAdapter.ExcelSource.1";
-
 
             // Create the design-time instance of the source.
             CManagedComponentWrapper srcDesignTime = source.Instantiate();
@@ -204,33 +177,22 @@ public class WorkingExample
             srcDesignTime.SetComponentProperty("AccessMode", 0); // Mode 0 : OpenRowset / Table - View
             srcDesignTime.SetComponentProperty("OpenRowset", "Sheet1$");
 
-
             //srcDesignTime.SetComponentProperty("OpenRowset", GetSheetNames());
             // Connect to the data source, and then update the metadata for the source.
             srcDesignTime.AcquireConnections(null);
             srcDesignTime.ReinitializeMetaData();
             //ADDED TODAY
-            IDTSExternalMetadataColumn90 exOutColumn;
+            IDTSExternalMetadataColumn100 exOutColumn;
 
-            foreach (IDTSOutputColumn90 outColumn in source.OutputCollection[0].OutputColumnCollection)
+            foreach (IDTSOutputColumn100 outColumn in source.OutputCollection[0].OutputColumnCollection)
             {
-
-                exOutColumn = source.OutputCollection[0].
-
-                ExternalMetadataColumnCollection[outColumn.Name];
-                srcDesignTime.MapOutputColumn(
-
-                source.OutputCollection[0].ID, outColumn.ID, exOutColumn.ID, true);
-
+                exOutColumn = source.OutputCollection[0].ExternalMetadataColumnCollection[outColumn.Name];
+                srcDesignTime.MapOutputColumn(source.OutputCollection[0].ID, outColumn.ID, exOutColumn.ID, true);
             }
-
             srcDesignTime.ReleaseConnections();
-
-
 
             ////addded
             //Open Excel Connection
-
             ////Add an Row Count to the data flow.
             //IDTSComponentMetaData90 RowCountComponent = dataFlowTask.ComponentMetaDataCollection.New();
             //RowCountComponent.Name = "Row Count";
@@ -246,11 +208,10 @@ public class WorkingExample
             //IDTSPath90 pathSource_RowCount = dataFlowTask.PathCollection.New();
             //pathSource_RowCount.AttachPathAndPropagateNotifications(source.OutputCollection[0], RowCountComponent.InputCollection[0]);
 
-
             // Connect the source and the transform
             //dataFlowTask.PathCollection.New().AttachPathAndPropagateNotifications(source.OutputCollection[0],conversionDataFlowComponent.InputCollection[0]);
             // Create and configure an OLE DB destination component.
-            IDTSComponentMetaData90 destination = dataFlowTask.ComponentMetaDataCollection.New();
+            IDTSComponentMetaData100 destination = dataFlowTask.ComponentMetaDataCollection.New();
             destination.ComponentClassID = "DTSAdapter.OLEDBDestination.1";
 
             // Create the design-time instance of the destination.
@@ -265,111 +226,75 @@ public class WorkingExample
             destination.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.ToConnectionManager90(DconMgr);
             // Set the custom properties.
             destDesignTime.SetComponentProperty("AccessMode", 3); // Mode 3 : OpenRowset Using FastLoad / Table - View fast load
-            destDesignTime.SetComponentProperty("OpenRowset", "[dbo].[Role]");
+            destDesignTime.SetComponentProperty("SqlCommand", "SELECT * FROM PRODUCTS");
 
             //Conversion
-            IDTSComponentMetaData90 conversionDataFlowComponent = dataFlowTask.ComponentMetaDataCollection.New();// creating data conversion 
-            conversionDataFlowComponent.ComponentClassID = "{C3BF62C8-7C5C-4F85-83C3-E0B6F6BE267C}";// This is the GUID for data conversion component
+            IDTSComponentMetaData100 conversionDataFlowComponent = dataFlowTask.ComponentMetaDataCollection.New();// creating data conversion 
+            conversionDataFlowComponent.ComponentClassID = "DTSTransform.DataConvert";//"{C3BF62C8-7C5C-4F85-83C3-E0B6F6BE267C}";// This is the GUID for data conversion component
             CManagedComponentWrapper conversionInstance = conversionDataFlowComponent.Instantiate();//Instantiate
             conversionInstance.ProvideComponentProperties();
-
             conversionDataFlowComponent.Name = "Conversion compoenent";
 
             // Create the path.
-
-            IDTSPath90 fPath = dataFlowTask.PathCollection.New(); fPath.AttachPathAndPropagateNotifications(
-
+            IDTSPath100 fPath = dataFlowTask.PathCollection.New(); fPath.AttachPathAndPropagateNotifications(
             source.OutputCollection[0],
-
             conversionDataFlowComponent.InputCollection[0]);
-
             conversionInstance.AcquireConnections(null);
-
             conversionInstance.ReinitializeMetaData();
 
             ///ADDDED TODAY
-            ///
-            IDTSPath90 path = dataFlowTask.PathCollection.New();
-
-            path.AttachPathAndPropagateNotifications(
-
-            conversionDataFlowComponent.OutputCollection[0],
-
-            destination.InputCollection[0]
-
-            );
+            IDTSPath100 path = dataFlowTask.PathCollection.New();
+            path.AttachPathAndPropagateNotifications(conversionDataFlowComponent.OutputCollection[0], destination.InputCollection[0]);
+            
             // Get the output collection
-
-            IDTSOutput90 output = conversionDataFlowComponent.OutputCollection[0];
-
-            IDTSVirtualInput90 virtualInput = conversionDataFlowComponent.InputCollection[0].GetVirtualInput();
-
+            IDTSOutput100 output = conversionDataFlowComponent.OutputCollection[0];
+            IDTSVirtualInput100 virtualInput = conversionDataFlowComponent.InputCollection[0].GetVirtualInput();
             int inputId = conversionDataFlowComponent.InputCollection[0].ID;
-
-            foreach (IDTSVirtualInputColumn90 vcolumn in virtualInput.VirtualInputColumnCollection)
+            foreach (IDTSVirtualInputColumn100 vcolumn in virtualInput.VirtualInputColumnCollection)
             {
-
-
                 string DataType = "Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType.";
                 string finaldatatype = "";
                 //IDTSExternalMetadataColumn90 exColumn = dataConvertOutput.ExternalMetadataColumnCollection.New();
-
                 DataTable dtTempDBfields = dtDBfields.Clone();
                 string formattedColName = getformmatedSourceColumn(dtMappedExcelToDB, vcolumn.Name);
                 string whereclauseDBF = "DBFields = '" + formattedColName + "'";
                 string bstrName = formattedColName; //vColumn.Name.ToString() + "AsString";
-                                                    //
 
                 foreach (DataRow DRC in dtDBfields.Select(whereclauseDBF))
                 {
                     dtTempDBfields.ImportRow(DRC);
                 }
                 int sourceColumnLineageId = virtualInput.VirtualInputColumnCollection[vcolumn.Name.ToString()].LineageID;
-
                 Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType dtype = new Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType();
                 dtype = getSSISDataTypes(dtTempDBfields.Rows[0][1].ToString());
 
-
-                IDTSInputColumn90 inputColumn = conversionInstance.SetUsageType(inputId, virtualInput, vcolumn.LineageID, DTSUsageType.UT_READONLY);
-
-                IDTSOutputColumn90 outputColumn = conversionInstance.InsertOutputColumnAt(output.ID, 0, bstrName, string.Empty);
-
+                IDTSInputColumn100 inputColumn = conversionInstance.SetUsageType(inputId, virtualInput, vcolumn.LineageID, DTSUsageType.UT_READONLY);
+                IDTSOutputColumn100 outputColumn = conversionInstance.InsertOutputColumnAt(output.ID, 0, bstrName, string.Empty);
                 conversionInstance.SetOutputColumnDataTypeProperties(output.ID, outputColumn.ID, dtype, int.Parse(dtSetDataTypeProperties.Rows[0]["length"].ToString()), int.Parse(dtSetDataTypeProperties.Rows[0]["precision"].ToString()), int.Parse(dtSetDataTypeProperties.Rows[0]["scale"].ToString()), int.Parse(dtSetDataTypeProperties.Rows[0]["codepage"].ToString()));
-
                 outputColumn.CustomPropertyCollection[0].Value = inputColumn.LineageID;
-
-
                 dtSetDataTypeProperties.Clear();
             }
             conversionInstance.ReleaseConnections();
+            
             //Conversion
-
             destDesignTime.AcquireConnections(null);
             destDesignTime.ReinitializeMetaData();
-            IDTSInput90 input;
-
-            IDTSVirtualInput90 vInput;
+            IDTSInput100 input;
+            IDTSVirtualInput100 vInput;
 
             // Get the destination's default input and virtual input.
-
             input = destination.InputCollection[0];
-
             vInput = input.GetVirtualInput();
 
             // Iterate through the virtual input column collection.
 
-            foreach (IDTSVirtualInputColumn90 vColumn in
-
-            vInput.VirtualInputColumnCollection)
+            foreach (IDTSVirtualInputColumn100 vColumn in vInput.VirtualInputColumnCollection)
             {
                 string whereclauseEXF = "ExcelFields = '" + vColumn.Name + "'";
-
-
                 DataTable dtTempExcelFields = dtExcelFields.Clone();
                 foreach (DataRow DRC in dtExcelFields.Select(whereclauseEXF))
                 {
                     dtTempExcelFields.ImportRow(DRC);
-
                 }
                 if (dtTempExcelFields.Rows.Count > 0)
                 {
@@ -378,40 +303,21 @@ public class WorkingExample
                 else
                 {
                     destDesignTime.SetUsageType(
-
                     input.ID, vInput, vColumn.LineageID,
-
                     DTSUsageType.UT_READONLY);
                 }
                 // culprit Line. I can found vColumn.LineageID = source lineage ids
-
                 // while debugging.. can you please help me out here?
 
             }
 
-
-
-
-            IDTSExternalMetadataColumn90 exColumn;
-
-            foreach (IDTSInputColumn90 inColumn in
-
-            destination.InputCollection[0].InputColumnCollection)
+            IDTSExternalMetadataColumn100 exColumn;
+            foreach (IDTSInputColumn100 inColumn in destination.InputCollection[0].InputColumnCollection)
             {
-
-                exColumn = destination.InputCollection[0].
-
-                ExternalMetadataColumnCollection[inColumn.Name];
-                destDesignTime.MapInputColumn(destination.
-
-                InputCollection[0].ID, inColumn.ID, exColumn.ID);
-
+                exColumn = destination.InputCollection[0].ExternalMetadataColumnCollection[inColumn.Name];
+                destDesignTime.MapInputColumn(destination.InputCollection[0].ID, inColumn.ID, exColumn.ID);
             }
-
-
             destDesignTime.ReleaseConnections();
-
-
 
             // Iterate through the virtual input column collection
             //foreach (IDTSVirtualInputColumn90 vColumn in
@@ -446,12 +352,7 @@ public class WorkingExample
             // }
 
 
-
-
-
             //////Add transform
-
-
             // IDTSComponentMetaData90 dataConvertComponent = dataFlowTask.ComponentMetaDataCollection.New();
             // dataConvertComponent.ComponentClassID = "DTSTransform.DataConvert";
             // dataConvertComponent.Name = "Data Convert";
@@ -596,29 +497,21 @@ public class WorkingExample
             // destDesignTime.SetUsageType(
             // input1.ID, vInput, vColumn.LineageID, DTSUsageType.UT_READONLY);
 
-
             //}
 
 
             ////map external metadata to the inputcolumn
             //foreach (IDTSInputColumn90 inputColumn in input1.InputColumnCollection)
             //{
-
-
             // string formattedColName = getformmatedSourceColumn(dtMappedExcelToDB, inputColumn.Name);
-
-
             // IDTSExternalMetadataColumn90 exMetaColumn = (IDTSExternalMetadataColumn90)input1.ExternalMetadataColumnCollection[formattedColName];
-
             // inputColumn.ExternalMetadataColumnID = exMetaColumn.ID;
             //}
 
 
             //Saving the package
-
             app.SaveToXml(@"E:\iPlan\Site work\SamplePackage\SamplePackage\SamplePackage.dtsx", package, null);
             //app.SaveToXml(@"\\ts-dev1\\iPlan\\Site work\\SamplePackage\\SamplePackage\\SamplePackage.dtsx", package, null);
-
 
             string pkgLocation;
             Package pkg;
@@ -808,6 +701,7 @@ public class WorkingExample
         }
         return formattedColName;
     }
+
     //protected string GetSheetNames(string tempfileName)
     //{
 
@@ -825,7 +719,6 @@ public class WorkingExample
     // }
     // return str.ToString();
     //}
-
 
     protected DataSet GetExcelData(string templateName)
     {
@@ -853,11 +746,12 @@ public class WorkingExample
         }
         return ds;
     }
+
     protected DataTable GetDBColumnNames()
     {
         DataSet ds = new DataSet();
         DataTable dt = null;
-        OleDbConnection conn = new OleDbConnection(ConfigurationManager.AppSettings["AdventureWorksConnectionString"].ToString());
+        OleDbConnection conn = new OleDbConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "LDAP"));
         try
         {
             OleDbCommand cmd = new OleDbCommand("Select * from Role", conn);
