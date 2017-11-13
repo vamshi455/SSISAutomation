@@ -13,17 +13,47 @@ namespace SSISPackageAutomation
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            //Application application = new Application();
-            //PipelineComponentInfos componentInfos = application.PipelineComponentInfos;
-            //foreach (PipelineComponentInfo componentInfo in componentInfos)
-            //{
-            //    Console.WriteLine("Name: " + componentInfo.Name + "  CreationName: " + componentInfo.CreationName);
-            //}
-            Program pg = new Program();
-            pg.GetPostGreSQLSchema();  //one - 
-            pg.CreatePackage("AO_6");  //variable
+            try
+            {
+                if (args.Length == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    System.Console.WriteLine("Please pass Entity and File Location: ");
+                    System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
+                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    return 1;
+                }
+
+                if (args[0] == "")
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    System.Console.WriteLine("Please pass Entity and File Location: ");
+                    System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
+                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    return 1;
+                }
+
+                if (args[1] == "")
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    System.Console.WriteLine("Please pass Entity and File Location: ");
+                    System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
+                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    return 1;
+                }
+
+                Program pg = new Program();
+                //pg.GetPostGreSQLSchema();  //one - 
+                pg.CreatePackage(args[0], args[1]);  //variable
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
             //commit
         }
 
@@ -258,7 +288,7 @@ namespace SSISPackageAutomation
             return sqltype;
         }
 
-        public void CreatePackage(string entity)
+        public void CreatePackage(string entity , string filepath)
         {
             try
             {
@@ -266,7 +296,6 @@ namespace SSISPackageAutomation
                 Console.ForegroundColor = ConsoleColor.Yellow;
 
                 //// Read input parameters
-                var file = "C:\\vamshi\\GIT\\SSIS PackageAutomation\\SSISPackageAutomation\\FILELOCATION\\SAMPLEINPUT.txt";
                 var server = "ebi-etl-dev-01";
                 var database = "JIRA_ODS";
 
@@ -304,7 +333,7 @@ namespace SSISPackageAutomation
                 var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
                 connection.Open();
                 List<String> TableNames = new List<String>();
-                string query = "SELECT TABLE_NAME FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE '" + entity + "%'";
+                string query = "SELECT DISTINCT TABLE_NAME FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE '" + entity + "%'";
                 using (SqlCommand PostGrsCmd = new SqlCommand(query, connection))
                 {
                     using (SqlDataReader PostRead = PostGrsCmd.ExecuteReader())
@@ -317,103 +346,206 @@ namespace SSISPackageAutomation
                 }
                 connection.Close();
 
+                //ADD EXECUTE SQL TASK - FOR TRUNCATING DATA BEFORE LOADING
+                Executable eFileTask1 = package.Executables.Add("STOCK:SQLTask");
+                TaskHost SQLTask = (TaskHost)(eFileTask1);
+                SQLTask.Properties["Name"].SetValue(SQLTask, "Truncate Existing Data in Destination");
+                SQLTask.Properties["Description"].SetValue(SQLTask, "Erases existing data in the destination tables before loading");
+                SQLTask.Properties["Connection"].SetValue(SQLTask, connMgrOleDb.Name);
+                string Truncatescript = GetTruncateScript(TableNames);
+                SQLTask.Properties["SqlStatementSource"].SetValue(SQLTask, Truncatescript);
+
                 // Add a Data Flow Task to the Package
                 var app = new Application();
-
-                foreach (string TableNm in TableNames)
+                if (TableNames.Count > 0)
                 {
-                    var e = package.Executables.Add("STOCK:PipelineTask");
-                    var mainPipe = e as TaskHost;
-                    var dataFlowTask = mainPipe.InnerObject as MainPipe;
-                    mainPipe.Name = TableNm;
-                    if (dataFlowTask != null)
+                    foreach (string TableNm in TableNames)
+                    {
+                        var e = package.Executables.Add("STOCK:PipelineTask");
+                        var mainPipe = e as TaskHost;
+                        var dataFlowTask = mainPipe.InnerObject as MainPipe;
+                        mainPipe.Name = TableNm;
+
+                        if (dataFlowTask != null)
                         {
-                            // Add a Flat ODBC Source Component to the Data Flow Task
-                            var ODBCSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
-                            ODBCSourceComponent.Name = "My PostgreSQL_" + TableNm;
-                            ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName; // "A77F5655-A006-443A-9B7E-90B6BD55CB84";//"DTSAdapter.ODBCSource";//app.PipelineComponentInfos["ODBC"].CreationName;
-                            var ODBCSourceInstance = ODBCSourceComponent.Instantiate();
-                            ODBCSourceInstance.ProvideComponentProperties();
-                            ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(ConMgr);
-                            ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = ConMgr.ID;
-                            ODBCSourceInstance.SetComponentProperty("AccessMode", 2);
-                            string cmd = "SELECT * FROM public.\"" + TableNm + "\"";
-                            ODBCSourceInstance.SetComponentProperty("SqlCommand", cmd);
+                            try
+                            {
+                                // Add a Flat ODBC Source Component to the Data Flow Task
+                                var ODBCSourceComponent = dataFlowTask.ComponentMetaDataCollection.New();
+                                ODBCSourceComponent.Name = "My PostgreSQL_" + TableNm;
+                                ODBCSourceComponent.ComponentClassID = app.PipelineComponentInfos["ODBC Source"].CreationName; // "A77F5655-A006-443A-9B7E-90B6BD55CB84";//"DTSAdapter.ODBCSource";//app.PipelineComponentInfos["ODBC"].CreationName;
+                                var ODBCSourceInstance = ODBCSourceComponent.Instantiate();
+                                ODBCSourceInstance.ProvideComponentProperties();
+                                ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(ConMgr);
+                                ODBCSourceComponent.RuntimeConnectionCollection[0].ConnectionManagerID = ConMgr.ID;
+                                ODBCSourceInstance.SetComponentProperty("AccessMode", 2);
+                                string cmd = "SELECT * FROM public.\"" + TableNm + "\"";
+                                ODBCSourceInstance.SetComponentProperty("SqlCommand", cmd);
 
-                            // Reinitialize the metadata.
-                            ODBCSourceInstance.AcquireConnections(null);
-                            ODBCSourceInstance.ReinitializeMetaData();
-                            ODBCSourceInstance.ReleaseConnections();
+                                // Reinitialize the metadata.
+                                ODBCSourceInstance.AcquireConnections(null);
+                                ODBCSourceInstance.ReinitializeMetaData();
+                                ODBCSourceInstance.ReleaseConnections();
 
-                            // Add transform (DFT)
-                            IDTSComponentMetaData100 dataConvertComponent = dataFlowTask.ComponentMetaDataCollection.New();
-                            dataConvertComponent.ComponentClassID = "DTSTransform.DataConvert";
-                            dataConvertComponent.Name = "Data Convert";
-                            dataConvertComponent.Description = "Data Conversion Component";
-                            CManagedComponentWrapper dataConvertWrapper = dataConvertComponent.Instantiate();
-                            dataConvertWrapper.ProvideComponentProperties();
+                                //  Add transform data conversion
+                                IDTSComponentMetaData100 dataConvertComponent = dataFlowTask.ComponentMetaDataCollection.New();
+                                dataConvertComponent.ComponentClassID = "DTSTransform.DataConvert";
+                                dataConvertComponent.Name = "Data Convert";
+                                dataConvertComponent.Description = "Data Conversion Component";
+                                CManagedComponentWrapper dataConvertWrapper = dataConvertComponent.Instantiate();
+                                dataConvertWrapper.ProvideComponentProperties();
 
-                            // Connect the source and the transform
-                            dataFlowTask.PathCollection.New().AttachPathAndPropagateNotifications(ODBCSourceComponent.OutputCollection[0], dataConvertComponent.InputCollection[0]);
+                                // Connect the source and the transform
+                                dataFlowTask.PathCollection.New().AttachPathAndPropagateNotifications(ODBCSourceComponent.OutputCollection[0], dataConvertComponent.InputCollection[0]);
 
-                            // Configure the transform
-                            IDTSVirtualInput100 dataConvertVirtualInput = dataConvertComponent.InputCollection[0].GetVirtualInput();
-                            IDTSOutput100 dataConvertOutput = dataConvertComponent.OutputCollection[0];
-                            IDTSOutputColumnCollection100 dataConvertOutputColumns = dataConvertOutput.OutputColumnCollection;
+                                // Configure the transform
+                                IDTSVirtualInput100 dataConvertVirtualInput = dataConvertComponent.InputCollection[0].GetVirtualInput();
+                                IDTSOutput100 dataConvertOutput = dataConvertComponent.OutputCollection[0];
+                                IDTSOutputColumnCollection100 dataConvertOutputColumns = dataConvertOutput.OutputColumnCollection;
 
-                            ////only one column datatype is converted to different datatype
-                            //int sourceColumnLineageId = dataConvertVirtualInput.VirtualInputColumnCollection["REMOTE_OBJECT_TYPE"].LineageID;
-                            //dataConvertWrapper.SetUsageType(dataConvertComponent.InputCollection[0].ID, dataConvertVirtualInput, sourceColumnLineageId, DTSUsageType.UT_READONLY);
-                            //IDTSOutputColumn100 newOutputColumn = dataConvertWrapper.InsertOutputColumnAt(dataConvertOutput.ID, 0, "CNV_REMOTE_OBJECT_TYPE", string.Empty);
-                            //newOutputColumn.SetDataTypeProperties(Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType.DT_WSTR, 255, 0, 0, 0);
-                            //newOutputColumn.MappedColumnID = 0;
-                            //dataConvertWrapper.SetOutputColumnProperty(dataConvertOutput.ID, newOutputColumn.ID, "SourceInputColumnLineageID", sourceColumnLineageId);
+                                //only one column datatype is converted to different datatype
+                                //GET DATA COLUMNS OF TYPE NVARCHAR FROM SQL SERVER BY TABLE NAME
+                                //<list> column = GetColumnNVarcharFromTable(TableNm);
+                                var connection_column = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                                connection_column.Open();
+                                List<String> NvarcharColumns = new List<String>();
+                                string Query = "SELECT COLUMN_NAME FROM LOG_SCHEMA_COLUMN WHERE TABLE_NAME LIKE '" + TableNm + "' AND DESTINATION_COLUMN_DATATYPE LIKE 'NVARCHAR%' ";
+                                using (SqlCommand PostGrsCmd = new SqlCommand(Query, connection_column))
+                                {
+                                    using (SqlDataReader PostRead = PostGrsCmd.ExecuteReader())
+                                    {
+                                        while (PostRead.Read())
+                                        {
+                                            NvarcharColumns.Add(PostRead.GetString(0));
+                                        }
+                                    }
+                                }
+                                connection_column.Close();
 
-                            // Add an OLE DB Destination Component to the Data Flow
-                            var oleDbDestinationComponent = dataFlowTask.ComponentMetaDataCollection.New();
-                            oleDbDestinationComponent.Name = "MyOLEDBDestination";
-                            oleDbDestinationComponent.ComponentClassID = app.PipelineComponentInfos["OLE DB Destination"].CreationName;
+                                foreach (string Column in NvarcharColumns)
+                                {
+                                    int sourceColumnLineageId = dataConvertVirtualInput.VirtualInputColumnCollection[Column].LineageID;
+                                    dataConvertWrapper.SetUsageType(dataConvertComponent.InputCollection[0].ID, dataConvertVirtualInput, sourceColumnLineageId, DTSUsageType.UT_READONLY);
+                                    IDTSOutputColumn100 newOutputColumn = dataConvertWrapper.InsertOutputColumnAt(dataConvertOutput.ID, 0, Column, string.Empty);
+                                    newOutputColumn.SetDataTypeProperties(Microsoft.SqlServer.Dts.Runtime.Wrapper.DataType.DT_WSTR, 255, 0, 0, 0);
+                                    newOutputColumn.MappedColumnID = 0;
+                                    dataConvertWrapper.SetOutputColumnProperty(dataConvertOutput.ID, newOutputColumn.ID, "SourceInputColumnLineageID", sourceColumnLineageId);
+                                }
 
-                            // Get the design time instance of the Ole Db Destination component
-                            var oleDbDestinationInstance = oleDbDestinationComponent.Instantiate();
-                            oleDbDestinationInstance.ProvideComponentProperties();
+                                // Add an OLE DB Destination
+                                IDTSComponentMetaData100 oleDbDestinationComponent = dataFlowTask.ComponentMetaDataCollection.New();
+                                oleDbDestinationComponent.Name = "MyOLEDBDestination";
+                                oleDbDestinationComponent.ComponentClassID = app.PipelineComponentInfos["OLE DB Destination"].CreationName;
 
-                            // Set Ole Db Destination Connection
-                            oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManagerID = connMgrOleDb.ID;
-                            oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(connMgrOleDb);
+                                // Get the design time instance of the Ole Db Destination component
+                                IDTSDesigntimeComponent100 oleDbDestinationInstance = oleDbDestinationComponent.Instantiate();
+                                oleDbDestinationInstance.ProvideComponentProperties();
 
-                            // Set destination load type
-                            oleDbDestinationInstance.SetComponentProperty("AccessMode", 3);
-                            // Now set Ole Db Destination Table name
-                            oleDbDestinationInstance.SetComponentProperty("OpenRowset", TableNm);
+                                // Set Ole Db Destination Connection
+                                oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManagerID = connMgrOleDb.ID;
+                                oleDbDestinationComponent.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(connMgrOleDb);
 
-                            // Get the list of available columns
-                            var oleDbDestinationInput = oleDbDestinationComponent.InputCollection[0];
-                            var oleDbDestinationvInput = oleDbDestinationInput.GetVirtualInput();
-                            var oleDbDestinationVirtualInputColumns = oleDbDestinationvInput.VirtualInputColumnCollection;
+                                // Set destination load type
+                                oleDbDestinationInstance.SetComponentProperty("AccessMode", 3);
+                                oleDbDestinationInstance.SetComponentProperty("OpenRowset", TableNm);
 
-                            // Reinitialize the metadata
-                            oleDbDestinationInstance.AcquireConnections(null);
-                            oleDbDestinationInstance.ReinitializeMetaData();
-                            oleDbDestinationInstance.ReleaseConnections();
+                                // Get the list of available columns
+                                var oleDbDestinationInput = oleDbDestinationComponent.InputCollection[0];
+                                var oleDbDestinationvInput = oleDbDestinationInput.GetVirtualInput();
+                                var oleDbDestinationVirtualInputColumns = oleDbDestinationvInput.VirtualInputColumnCollection;
 
-                            // Create a Precedence Constraint between Data conversion component and OLEDB Destination Components
-                            var path = dataFlowTask.PathCollection.New();
-                            path.AttachPathAndPropagateNotifications(dataConvertComponent.OutputCollection[0], oleDbDestinationComponent.InputCollection[0]);
+                                // Reinitialize the metadata
+                                oleDbDestinationInstance.AcquireConnections(null);
+                                oleDbDestinationInstance.ReinitializeMetaData();
+                                oleDbDestinationInstance.ReleaseConnections();
+
+                                // Create a Precedence Constraint between Data conversion component and OLEDB Destination Components
+                                var path = dataFlowTask.PathCollection.New();
+                                path.AttachPathAndPropagateNotifications(dataConvertComponent.OutputCollection[0], oleDbDestinationComponent.InputCollection[0]);
+
+                                // Configure the destination
+                                IDTSInput100 destInput = oleDbDestinationComponent.InputCollection[0];
+                                IDTSVirtualInput100 destVirInput = destInput.GetVirtualInput();
+                                IDTSInputColumnCollection100 destInputCols = destInput.InputColumnCollection;
+                                IDTSExternalMetadataColumnCollection100 destExtCols = destInput.ExternalMetadataColumnCollection;
+                                IDTSOutputColumnCollection100 sourceColumns = dataConvertComponent.OutputCollection[0].OutputColumnCollection;
+                                IDTSOutputColumnCollection100 oledbSource = ODBCSourceComponent.OutputCollection[0].OutputColumnCollection;
+
+                                // The OLEDB destination requires you to hook up the external data conversion columns
+                                foreach (IDTSOutputColumn100 outputCol in sourceColumns)
+                                {
+                                    // Get the external column id
+                                    IDTSExternalMetadataColumn100 extCol = (IDTSExternalMetadataColumn100)destExtCols[outputCol.Name];
+                                    if (extCol != null)
+                                    {
+                                        // Create an input column from an output col of previous component.
+                                        destVirInput.SetUsageType(outputCol.ID, DTSUsageType.UT_READONLY);
+                                        IDTSInputColumn100 inputCol = destInputCols.GetInputColumnByLineageID(outputCol.ID);
+                                        if (inputCol != null)
+                                        {
+                                            // map the input column with an external metadata column
+                                            oleDbDestinationInstance.MapInputColumn(destInput.ID, inputCol.ID, extCol.ID);
+                                        }
+                                    }
+                                }
+
+                                // The OLEDB destination requires you to hook up the external Excel source columns
+                                foreach (IDTSOutputColumn100 outputCol in oledbSource)
+                                {
+                                    // Get the external column id
+                                    IDTSExternalMetadataColumn100 extCol = (IDTSExternalMetadataColumn100)destExtCols[outputCol.Name];
+                                    if (extCol != null)
+                                    {
+                                        // Create an input column from an output col of previous component.
+                                        destVirInput.SetUsageType(outputCol.ID, DTSUsageType.UT_READONLY);
+                                        IDTSInputColumn100 inputCol = destInputCols.GetInputColumnByLineageID(outputCol.ID);
+                                        if (inputCol != null)
+                                        {
+                                            // map the input column with an external metadata column
+                                            oleDbDestinationInstance.MapInputColumn(destInput.ID, inputCol.ID, extCol.ID);
+                                        }
+                                    }
+                                }
+
+                                PrecedenceConstraint pcFileTasks = package.PrecedenceConstraints.Add((Executable)SQLTask, (Executable)mainPipe);
+                                pcFileTasks.Value = DTSExecResult.Completion;
+                            }
+
+                            catch (Exception ex)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("Hey der...Exception Occured while creating DFT: " + ex.Message + "\t" + ex.GetType() + "Press any key to close....");
+                                Console.ForegroundColor = ConsoleColor.Blue;
+                                Console.ReadKey();
+                            }
+
                         }
+                    }
+
+                    var dtsx = new StringBuilder();
+                    string PackageName = entity + "_Tables_Load_History";
+                    dtsx.Append(filepath).Append("\\").Append(PackageName).Append(".dtsx");
+                    Console.WriteLine("Saving Package...");
+                    app.SaveToXml(dtsx.ToString(), package, null);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Done; Packages are successfully created in the following path:   " + filepath);
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.ReadKey();
+                    package.Dispose();
                 }
-                var dtsx = new StringBuilder();
-                string PackageName = entity + "Tables";
-                dtsx.Append(Path.GetDirectoryName(file)).Append("\\").Append(PackageName).Append(".dtsx");
-                Console.WriteLine("Saving Package...");
-                app.SaveToXml(dtsx.ToString(), package, null);
-                Console.WriteLine("Done");
-                Console.ReadLine();
-                package.Dispose();
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Bad Selection, check you don't have comma, pass arguments with out comma seperation:   " + filepath);
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                }
             }
             catch (Exception ex)
             {
-
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Hey der...Exception Occured while saving the package: " + ex.Message + "\t" + ex.GetType() + "Press any key to close....");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.ReadKey();
             }
         }
 
@@ -429,7 +561,9 @@ namespace SSISPackageAutomation
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception Occre while inserting into table LOG_SHCEMA_TABLE" + e.Message + "\t" + e.GetType());
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Hey der...Exception Occured while inserting into table LOG_SHCEMA_TABLE: " + e.Message + "\t" + e.GetType() + "Press any key to close....");
+                Console.ReadKey();
             }
           //  Console.ReadKey();
         }
@@ -461,11 +595,11 @@ namespace SSISPackageAutomation
                     cmd.Parameters[6].Value = item.COLUMN_ISNULL;
                     cmd.ExecuteNonQuery();
                 }
-                
                 connection.Close();
             }
             catch (Exception e)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Exception Occre while inserting into table LOG_SCHEMA_COLUMN" + e.Message + "\t" + e.GetType());
             }
         }
@@ -483,36 +617,49 @@ namespace SSISPackageAutomation
             }
             throw new Exception("DataFlow task does not exist.");
         }
+
+        public string GetTruncateScript(List<String> List)
+        {
+            string TruncateScript = "";
+            foreach (var item in List)
+            {
+                TruncateScript = TruncateScript + "Truncate table " + item + ";";
+            }
+            return TruncateScript;
+        }
+
     }
 
-//USE JIRA_ODS
+   
 
-//CREATE TABLE LOG_SCHEMA_TABLE
-//(
-//TABLE_ID INT IDENTITY(1,1),
-//TABLE_NAME VARCHAR(100),
-//SCHEMA_RAW NVARCHAR(MAX),
-//SCHEMA_STATUS VARCHAR(100) NULL,
-//SCHEMA_ISSUES NVARCHAR(1000) NULL,
-//PACKAGE_CREATED VARCHAR(3) NULL,
-//PACKAGE_ISSUES NVARCHAR(1000) NULL,
-//CREATION_DATE DATETIME NULL,
-//UPDATED_DATE DATETIME NULL
-//)
+    //USE JIRA_ODS
 
-//CREATE TABLE LOG_SCHEMA_COLUMN
-//(
-//TABLE_COLUMN_ID INT IDENTITY(1,1),
-//TABLE_ID INT,
-//COLUMN_NAME VARCHAR(100),
-//SOURCE_COLUMN_DATATYPE VARCHAR(100),
-//DESTINATION_COLUMN_DATATYPE VARCHAR(100),
-//COLUMN_PRECISION INT NULL,
-//COLUMN_SCALE INT NULL,
-//COLUMN_ISNULL VARCHAR(3),
-//COLUMN_1 VARCHAR(100) NULL,
-//COLUMN_2 VARCHAR(100) NULL,
-//COLUMN_3 VARCHAR(100) NULL
-//)	
-    
+    //CREATE TABLE LOG_SCHEMA_TABLE
+    //(
+    //TABLE_ID INT IDENTITY(1,1),
+    //TABLE_NAME VARCHAR(100),
+    //SCHEMA_RAW NVARCHAR(MAX),
+    //SCHEMA_STATUS VARCHAR(100) NULL,
+    //SCHEMA_ISSUES NVARCHAR(1000) NULL,
+    //PACKAGE_CREATED VARCHAR(3) NULL,
+    //PACKAGE_ISSUES NVARCHAR(1000) NULL,
+    //CREATION_DATE DATETIME NULL,
+    //UPDATED_DATE DATETIME NULL
+    //)
+
+    //CREATE TABLE LOG_SCHEMA_COLUMN
+    //(
+    //TABLE_COLUMN_ID INT IDENTITY(1,1),
+    //TABLE_ID INT,
+    //COLUMN_NAME VARCHAR(100),
+    //SOURCE_COLUMN_DATATYPE VARCHAR(100),
+    //DESTINATION_COLUMN_DATATYPE VARCHAR(100),
+    //COLUMN_PRECISION INT NULL,
+    //COLUMN_SCALE INT NULL,
+    //COLUMN_ISNULL VARCHAR(3),
+    //COLUMN_1 VARCHAR(100) NULL,
+    //COLUMN_2 VARCHAR(100) NULL,
+    //COLUMN_3 VARCHAR(100) NULL
+    //)	
+
 }
