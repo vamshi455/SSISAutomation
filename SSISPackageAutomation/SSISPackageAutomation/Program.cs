@@ -139,28 +139,36 @@ namespace SSISPackageAutomation
                             sqlselect.Append("CREATE TABLE ");
                             sqlselect.Append(TableNm);  //variable
                             sqlselect.Append(" (");
+                            List<ColumnDetails> lstColumnDetails = new List<ColumnDetails>();
 
                             int i = 0;
                             foreach (DataRow row in schema.Rows)
                             {
                                 i = i + 1;
+                                string SQLDatatype;
                                 if (i != schema.Rows.Count)
                                 {
                                     sqlselect.Append("["+ row["COLUMNNAME"].ToString() + "]" + "  ");
-                                    sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString()) + ","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
+                                    SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
+                                    sqlselect.Append(SQLDatatype  + ","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
+                                    lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype,  row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
                                 }
                                 else
                                 {
                                     sqlselect.Append("[" + row["COLUMNNAME"].ToString() + "]" + "  ");
+                                    SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
                                     sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString()) + ")"); //pass the system datatype to a function and get sql datatype
-                                }
+                                    lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype, row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
+                                 }
                             }
+
                             var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
                             var command = new SqlCommand(sqlselect.ToString(), connection);
                             // Create table in destination sql database to hold file data
                             connection.Open();
                             command.ExecuteNonQuery();
                             Log_TableEntry(TableNm, sqlselect.ToString(), "Success" );
+                            Log_TableColumnEntry(lstColumnDetails);
                             Console.WriteLine("Success, Created Table: " + TableNm);
                             connection.Close();
                         }
@@ -176,6 +184,27 @@ namespace SSISPackageAutomation
             {
 
             }
+        }
+
+        public class ColumnDetails
+        {
+            public ColumnDetails(string TABLE_NAME, string COLUMN_NAME, string SOURCE_COLUMN_DATATYPE, string DESTINATION_COLUMN_DATATYPE, string COLUMN_PRECISION, string COLUMN_SCALE, string COLUMN_ISNULL)
+            {
+                this.TABLE_NAME = TABLE_NAME;
+                this.COLUMN_NAME = COLUMN_NAME;
+                this.SOURCE_COLUMN_DATATYPE = SOURCE_COLUMN_DATATYPE;
+                this.DESTINATION_COLUMN_DATATYPE = DESTINATION_COLUMN_DATATYPE;
+                this.COLUMN_PRECISION = COLUMN_PRECISION;
+                this.COLUMN_SCALE = COLUMN_SCALE;
+                this.COLUMN_ISNULL = COLUMN_ISNULL;
+            }
+            public string TABLE_NAME { set; get; }
+            public string COLUMN_NAME { set; get; }
+            public string SOURCE_COLUMN_DATATYPE { set; get; }
+            public string DESTINATION_COLUMN_DATATYPE { set; get; }
+            public string COLUMN_PRECISION { set; get; }
+            public string COLUMN_SCALE { set; get; }
+            public string COLUMN_ISNULL { set; get; }
         }
 
         public string GetSQLDataType(string postgresqltype, string length, string precision, string scale, string providertype)
@@ -394,7 +423,6 @@ namespace SSISPackageAutomation
             {
                 var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
                 connection.Open();
-                //SqlCommand cmd = new SqlCommand(string.Format("insert into LOG_SCHEMA_TABLE (TABLE_NAME, SCHEMA_CREATED, SCHEMA_RAW, SCHEMA_ISSUES, SCHEMA_STATUS) values({0},{1},{2},{3},{4});", TableName,"Yes",Schema,"No",Status), connection);
                 SqlCommand cmd = new SqlCommand("insert into LOG_SCHEMA_TABLE (TABLE_NAME, SCHEMA_RAW, SCHEMA_STATUS, SCHEMA_ISSUES, CREATION_DATE) values ('" + TableName + "', '" + Schema + "', '" + Status + "', 'No', '" + DateTime.Now + "')", connection);
                 cmd.ExecuteNonQuery();
                 connection.Close();
@@ -404,6 +432,42 @@ namespace SSISPackageAutomation
                 Console.WriteLine("Exception Occre while inserting into table LOG_SHCEMA_TABLE" + e.Message + "\t" + e.GetType());
             }
           //  Console.ReadKey();
+        }
+
+        public void Log_TableColumnEntry(List<ColumnDetails> list)
+        {
+            try
+            {
+                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                connection.Open();
+                SqlCommand cmd = new SqlCommand("INSERT INTO LOG_SCHEMA_COLUMN (TABLE_NAME, COLUMN_NAME, SOURCE_COLUMN_DATATYPE, DESTINATION_COLUMN_DATATYPE, COLUMN_PRECISION, COLUMN_SCALE, COLUMN_ISNULL) VALUES (@param1, @param2, @param3,@param4, @param5, @param6, @param7)");
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = connection;
+                cmd.Parameters.AddWithValue("@param1", DbType.String);
+                cmd.Parameters.AddWithValue("@param2", DbType.String);
+                cmd.Parameters.AddWithValue("@param3", DbType.String);
+                cmd.Parameters.AddWithValue("@param4", DbType.String);
+                cmd.Parameters.AddWithValue("@param5", DbType.Int16);
+                cmd.Parameters.AddWithValue("@param6", DbType.Int16);
+                cmd.Parameters.AddWithValue("@param7", DbType.String);
+                foreach (var item in list)
+                {
+                    cmd.Parameters[0].Value = item.TABLE_NAME;
+                    cmd.Parameters[1].Value = item.COLUMN_NAME;
+                    cmd.Parameters[2].Value = item.SOURCE_COLUMN_DATATYPE;
+                    cmd.Parameters[3].Value = item.DESTINATION_COLUMN_DATATYPE;
+                    cmd.Parameters[4].Value = item.COLUMN_PRECISION;
+                    cmd.Parameters[5].Value = item.COLUMN_SCALE;
+                    cmd.Parameters[6].Value = item.COLUMN_ISNULL;
+                    cmd.ExecuteNonQuery();
+                }
+                
+                connection.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception Occre while inserting into table LOG_SCHEMA_COLUMN" + e.Message + "\t" + e.GetType());
+            }
         }
 
         public IDTSComponentMetaData100 AddComponentToDataFlow(MainPipe mp, string Component)
