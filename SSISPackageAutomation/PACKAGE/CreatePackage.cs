@@ -17,37 +17,56 @@ namespace SSISPackageAutomation
         {
             try
             {
+                CreatePackage pg = new CreatePackage();
+                List<String> Groups = new List<String>();
+                Groups = pg.GetAvailableEntities();
                 if (args.Length == 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    System.Console.WriteLine("Please pass Entity and File Location: ");
-                    System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
-                    System.Console.WriteLine("File Location like: D:\\FolderName (in which SSIS Packages will be stored)");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    System.Console.WriteLine("Please pass Entity and File Location: CreatePackage.Exe EntityName AnyFolder (example: CreatePackage.Exe AO_8  C:\\FOLDER1\\SSISAutomationPackages)");
+                    Console.WriteLine("Available Entities are:");
+                    System.Console.WriteLine("ALL");
+                    foreach (string group in Groups)
+                       {
+                        System.Console.Write(group + ", ");
+                       }
+                    Console.ForegroundColor = ConsoleColor.White;
                     return 1;
                 }
 
                 if (args[0] == "")
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    System.Console.WriteLine("Please pass Entity and File Location: ");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine("Please pass Entity and File Location: Like Example:  CreatePackage.Exe A0_8 D:\\FolderName");
                     System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
                     System.Console.WriteLine("File Location Like: D:\\FolderName (in which SSIS Packages will be stored)");
+                    Console.ForegroundColor = ConsoleColor.White;
                     return 1;
                 }
 
                 if (args[1] == "")
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    System.Console.WriteLine("Please pass Entity and File Location: ");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine("Please pass Entity and File Location: Like Example:  CreatePackage.Exe A0_8 D:\\FolderName");
                     System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
                     System.Console.WriteLine("File Location Like: D:\\FolderName (in which SSIS Packages will be stored)");
+                    Console.ForegroundColor = ConsoleColor.White;
                     return 1;
                 }
 
-                CreatePackage pg = new CreatePackage();
-                //pg.GetPostGreSQLSchema();  //one - 
-                pg.GeneratePackage(args[0], args[1]);  //variable
 
+                //pg.GetPostGreSQLSchema();  //one 
+                if (args[0].ToUpper() != "ALL")
+                {
+                    pg.GeneratePackage(args[0], args[1]);
+                }
+                else if (args[0].ToUpper() == "ALL")
+                {
+                    foreach (string Group in Groups)
+                    {
+                        pg.GeneratePackage(Group, args[1]);
+                    }
+                }
                 return 0;
             }
             catch (Exception ex)
@@ -57,11 +76,33 @@ namespace SSISPackageAutomation
             //commit
         }
 
+        public List<String> GetAvailableEntities()
+        {
+            //get list of tables in one package from SQL
+            var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+            connection.Open();
+            List<String> GroupNames = new List<String>();
+            string query = "SELECT SUBSTRING(TABLE_NAME,0,5) FROM LOG_SCHEMA_TABLE GROUP BY SUBSTRING(TABLE_NAME,0,5) ORDER BY COUNT(1) DESC";
+            using (SqlCommand PostGrsCmd = new SqlCommand(query, connection))
+            {
+                using (SqlDataReader PostRead = PostGrsCmd.ExecuteReader())
+                {
+                    while (PostRead.Read())
+                    {
+                        GroupNames.Add(PostRead.GetString(0));
+                    }
+                }
+            }
+            connection.Close();
+            return GroupNames;
+        }
+
         public void GeneratePackage(string entity , string filepath)
         {
             try
             {
-                Console.Title = "SSIS Automation";
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("SSIS Automation: "+ entity + " is in Progress");
                 Console.ForegroundColor = ConsoleColor.Yellow;
 
                 //// Read input parameters
@@ -179,7 +220,7 @@ namespace SSISPackageAutomation
                                 var connection_column = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
                                 connection_column.Open();
                                 List<String> NvarcharColumns = new List<String>();
-                                string Query = "SELECT COLUMN_NAME FROM LOG_SCHEMA_COLUMN WHERE TABLE_NAME LIKE '" + TableNm + "' AND DESTINATION_COLUMN_DATATYPE LIKE 'NVARCHAR%' ";
+                                string Query = "SELECT COLUMN_NAME FROM LOG_SCHEMA_COLUMN WHERE TABLE_NAME LIKE '" + TableNm + "' AND DESTINATION_COLUMN_DATATYPE LIKE 'NVARCHAR%' AND DESTINATION_COLUMN_DATATYPE <> 'NVARCHAR(MAX)'";
                                 using (SqlCommand PostGrsCmd = new SqlCommand(Query, connection_column))
                                 {
                                     using (SqlDataReader PostRead = PostGrsCmd.ExecuteReader())
@@ -285,37 +326,36 @@ namespace SSISPackageAutomation
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine("Hey der...Exception Occured while creating DFT: " + ex.Message + "\t" + ex.GetType() + "Press any key to close....");
-                                Console.ForegroundColor = ConsoleColor.Blue;
-                                Console.ReadKey();
+                                Console.ForegroundColor = ConsoleColor.White;
+                                //Console.ReadKey();
                             }
 
                         }
                     }
 
                     var dtsx = new StringBuilder();
-                    string PackageName = entity + "_Tables_Load_History";
+                    string PackageName = entity + "_Tables_Load";
                     dtsx.Append(filepath).Append("\\").Append(PackageName).Append(".dtsx");
                     Console.WriteLine("Saving Package...");
                     app.SaveToXml(dtsx.ToString(), package, null);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("Done; Packages are successfully created in the following path:   " + filepath);
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.ReadKey();
+                    Console.ForegroundColor = ConsoleColor.White;
                     package.Dispose();
                 }
                 else
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Bad Selection, check you don't have comma, pass arguments with out comma seperation:   " + filepath);
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Hey der...Exception Occured while saving the package: " + ex.Message + "\t" + ex.GetType() + "Press any key to close....");
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.ReadKey();
+                Console.ForegroundColor = ConsoleColor.White;
+                //Console.ReadKey();
             }
         }
         
@@ -332,32 +372,85 @@ namespace SSISPackageAutomation
 
     //USE JIRA_ODS
 
-    //CREATE TABLE LOG_SCHEMA_TABLE
-    //(
-    //TABLE_ID INT IDENTITY(1,1),
-    //TABLE_NAME VARCHAR(100),
-    //SCHEMA_RAW NVARCHAR(MAX),
-    //SCHEMA_STATUS VARCHAR(100) NULL,
-    //SCHEMA_ISSUES NVARCHAR(1000) NULL,
-    //PACKAGE_CREATED VARCHAR(3) NULL,
-    //PACKAGE_ISSUES NVARCHAR(1000) NULL,
-    //CREATION_DATE DATETIME NULL,
-    //UPDATED_DATE DATETIME NULL
-    //)
+    //   --DROP ALL TABLES IN A DATABASE
+    //DECLARE @SQL NVARCHAR(MAX)
+    //SELECT @SQL = STUFF((SELECT ', ' + QUOTENAME(TABLE_SCHEMA) + '.' + QUOTENAME(TABLE_NAME)
+    //FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME <> 'LOG_SCHEMA_TABLE' and TABLE_NAME <> 'LOG_SCHEMA_COLUMN'
+    //FOR XML PATH('')),1,2,'')
+    //SET @SQL = 'DROP TABLE ' + @SQL
+    //EXEC(@SQL)
 
-    //CREATE TABLE LOG_SCHEMA_COLUMN
+    //TRUNCATE TABLE LOG_SCHEMA_TABLE
+    //TRUNCATE TABLE LOG_SCHEMA_COLUMN
+
+    //SELECT* FROM LOG_SCHEMA_COLUMN
+    //SELECT* FROM LOG_SCHEMA_TABLE
+
+    //SELECT SUBSTRING(TABLE_NAME,0,5),COUNT(1) FROM LOG_SCHEMA_TABLE GROUP BY SUBSTRING(TABLE_NAME,0,5) ORDER BY COUNT(1) DESC
+
+    //USE JIRA_ODS
+    //SELECT* FROM LOG_SCHEMA_TABLE where table_name like 'AO_%' --163
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'ISSUE%' --9
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'UPGRADE%' --4
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'JIRA%' --7
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'qrtz%' --8
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'AUDIT%' --3
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'NOTIF%' --3
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'property%' --7
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'project%' --7
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'upgrad%' --4
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'USER%' --6
+    //SELECT* FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'pro%' --6
+
+    //--????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    //SELECT SUBSTRING(TABLE_NAME,0,5) FROM LOG_SCHEMA_TABLE GROUP BY SUBSTRING(TABLE_NAME,0,5) ORDER BY COUNT(1) DESC
+    //--????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+
+
+    //SELECT COLUMN_NAME,* FROM LOG_SCHEMA_COLUMN WHERE TABLE_NAME LIKE 'PERM%' AND DESTINATION_COLUMN_DATATYPE LIKE 'NVARCHAR%' AND DESTINATION_COLUMN_DATATYPE<> 'NVARCHAR(MAX)'
+
+    //CREATE TABLE permissionscheme ([id] DECIMAL(18,0),[name]  NVARCHAR(255),[description]  NVARCHAR(MAX))
+
+    //WITH CTE_DENSE
+    //AS
     //(
-    //TABLE_COLUMN_ID INT IDENTITY(1,1),
-    //TABLE_ID INT,
-    //COLUMN_NAME VARCHAR(100),
-    //SOURCE_COLUMN_DATATYPE VARCHAR(100),
-    //DESTINATION_COLUMN_DATATYPE VARCHAR(100),
-    //COLUMN_PRECISION INT NULL,
-    //COLUMN_SCALE INT NULL,
-    //COLUMN_ISNULL VARCHAR(3),
-    //COLUMN_1 VARCHAR(100) NULL,
-    //COLUMN_2 VARCHAR(100) NULL,
-    //COLUMN_3 VARCHAR(100) NULL
-    //)	
+    //    SELECT SUBSTRING(TABLE_NAME,0,5) GROUP_NAME,DENSE_RANK() OVER(ORDER BY SUBSTRING(TABLE_NAME,0,5) DESC) [DENSE_RANK], TABLE_NAME FROM LOG_SCHEMA_TABLE 
+    //)
+    //SELECT DENSE_RANK, COUNT(1) FROM CTE_DENSE GROUP BY DENSE_RANK ORDER BY COUNT(1) DESC
+
+    /*
+     USE JIRA_ODS
+    CREATE TABLE LOG_SCHEMA_TABLE
+    (
+     TABLE_ID INT IDENTITY(1,1),
+     TABLE_NAME VARCHAR(100),
+     SCHEMA_RAW NVARCHAR(MAX),
+     SCHEMA_STATUS VARCHAR(100) NULL,
+     SCHEMA_ISSUES NVARCHAR(1000) NULL,
+     PACKAGE_CREATED VARCHAR(3) NULL,
+     PACKAGE_ISSUES NVARCHAR(1000) NULL,
+     SUPPORTS_INCREMENTAL VARCHAR(3) NULL,
+     CREATION_DATE DATETIME NULL,
+     UPDATED_DATE DATETIME NULL
+    )
+
+
+    CREATE TABLE LOG_SCHEMA_COLUMN
+    (
+     TABLE_COLUMN_ID INT IDENTITY(1,1),
+     TABLE_NAME VARCHAR(100),
+     COLUMN_NAME VARCHAR(100),
+     SOURCE_COLUMN_DATATYPE VARCHAR(100),
+     DESTINATION_COLUMN_DATATYPE VARCHAR(100),
+     COLUMN_PRECISION INT NULL,
+     COLUMN_SCALE INT NULL,
+     COLUMN_ISNULL VARCHAR(10),
+     COLUMN_1 VARCHAR(100) NULL,
+     COLUMN_2 VARCHAR(100) NULL,
+     COLUMN_3 VARCHAR(100) NULL
+    )	
+
+
+    */
 
 }
