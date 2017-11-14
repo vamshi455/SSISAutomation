@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace SSISPackageAutomation
 {
-    class Program
+    class CreatePackage
     {
         static int Main(string[] args)
         {
@@ -22,7 +22,7 @@ namespace SSISPackageAutomation
                     Console.ForegroundColor = ConsoleColor.Blue;
                     System.Console.WriteLine("Please pass Entity and File Location: ");
                     System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
-                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    System.Console.WriteLine("File Location like: D:\\FolderName (in which SSIS Packages will be stored)");
                     return 1;
                 }
 
@@ -31,7 +31,7 @@ namespace SSISPackageAutomation
                     Console.ForegroundColor = ConsoleColor.Blue;
                     System.Console.WriteLine("Please pass Entity and File Location: ");
                     System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
-                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    System.Console.WriteLine("File Location Like: D:\\FolderName (in which SSIS Packages will be stored)");
                     return 1;
                 }
 
@@ -40,13 +40,13 @@ namespace SSISPackageAutomation
                     Console.ForegroundColor = ConsoleColor.Blue;
                     System.Console.WriteLine("Please pass Entity and File Location: ");
                     System.Console.WriteLine("Entity Like:  AO_ , AO_A , AO_E, AO_3 , AO_5, AO_8 , AO_2 , AO_0");
-                    System.Console.WriteLine("File Location Like: D:\\FolderName (which SSIS Packages will be stored)");
+                    System.Console.WriteLine("File Location Like: D:\\FolderName (in which SSIS Packages will be stored)");
                     return 1;
                 }
 
-                Program pg = new Program();
+                CreatePackage pg = new CreatePackage();
                 //pg.GetPostGreSQLSchema();  //one - 
-                pg.CreatePackage(args[0], args[1]);  //variable
+                pg.GeneratePackage(args[0], args[1]);  //variable
 
                 return 0;
             }
@@ -57,242 +57,11 @@ namespace SSISPackageAutomation
             //commit
         }
 
-        public void Createexample()
-        {
-            // Create a package and add a Data Flow task.  
-            {
-                Microsoft.SqlServer.Dts.Runtime.Package package = new Microsoft.SqlServer.Dts.Runtime.Package();
-                Executable e = package.Executables.Add("STOCK:PipelineTask");
-                Microsoft.SqlServer.Dts.Runtime.TaskHost thMainPipe = (Microsoft.SqlServer.Dts.Runtime.TaskHost)e;
-                MainPipe dataFlowTask = (MainPipe)thMainPipe.InnerObject;
-
-                // Add an OLE DB connection manager to the package.  
-                ConnectionManager conMgr = package.Connections.Add("OLEDB");
-                conMgr.ConnectionString = "Provider=SQLOLEDB.1;" + "Data Source=ebi-etl-dev-01;Initial Catalog=LDAP;" + "Integrated Security=SSPI;";
-                conMgr.Name = "SSIS Connection Manager for OLE DB";
-                conMgr.Description = "OLE DB connection to the AdventureWorks database.";
-
-                // Create and configure an OLE DB source component.    
-                IDTSComponentMetaData100 source = dataFlowTask.ComponentMetaDataCollection.New();
-                source.ComponentClassID = "DTSAdapter.OleDbSource";
-                // Create the design-time instance of the source.  
-                CManagedComponentWrapper srcDesignTime = source.Instantiate();
-                // The ProvideComponentProperties method creates a default output.  
-                srcDesignTime.ProvideComponentProperties();
-                // Assign the connection manager.  
-                source.RuntimeConnectionCollection[0].ConnectionManager = DtsConvert.GetExtendedInterface(conMgr);
-                // Set the custom properties of the source.  
-                srcDesignTime.SetComponentProperty("AccessMode", 2);
-                srcDesignTime.SetComponentProperty("SqlCommand", "Select * from Products");
-
-                // Connect to the data source,  
-                //  and then update the metadata for the source.  
-                srcDesignTime.AcquireConnections(null);
-                srcDesignTime.ReinitializeMetaData();
-                srcDesignTime.ReleaseConnections();
-
-                // Create and configure an OLE DB destination.  
-                IDTSComponentMetaData100 destination = dataFlowTask.ComponentMetaDataCollection.New();
-                destination.ComponentClassID = "DTSAdapter.OleDbDestination";
-                // Create the design-time instance of the destination.  
-                CManagedComponentWrapper destDesignTime = destination.Instantiate();
-                // The ProvideComponentProperties method creates a default input.  
-                destDesignTime.ProvideComponentProperties();
-
-                // Create the path from source to destination.  
-                IDTSPath100 path = dataFlowTask.PathCollection.New();
-                path.AttachPathAndPropagateNotifications(source.OutputCollection[0], destination.InputCollection[0]);
-
-                // Get the destination's default input and virtual input.  
-                IDTSInput100 input = destination.InputCollection[0];
-                IDTSVirtualInput100 vInput = input.GetVirtualInput();
-
-                //only one column datatype is converted to different datatype
-                
-
-                
-                // Iterate through the virtual input column collection.  
-                foreach (IDTSVirtualInputColumn100 vColumn in vInput.VirtualInputColumnCollection)
-                {
-                    // Call the SetUsageType method of the destination  
-                    //  to add each available virtual input column as an input column.  
-                    destDesignTime.SetUsageType(input.ID, vInput, vColumn.LineageID, DTSUsageType.UT_READONLY);
-                }
-
-                // Verify that the columns have been added to the input.  
-                foreach (IDTSInputColumn100 inputColumn in destination.InputCollection[0].InputColumnCollection)
-                {
-                    Console.WriteLine(inputColumn.Name);
-                }
-                Console.Read();
-            }
-        }
-
-        public void GetPostGreSQLSchema()
+        public void GeneratePackage(string entity , string filepath)
         {
             try
             {
-                //get connect to postgresql
-                //String connstring = String.Format("Server ={0}; Port ={1}; User Id = {2}; Password ={3}; Database ={4};","localhost","5432", "vams3203", "123456", "NEWDB");
-                string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
-                NpgsqlConnection conn = new NpgsqlConnection(connstring);
-                conn.Open();
-                //string sqldrop = ""
-                List<String> TableNames = new List<String>();
-                string query = "select tablename from pg_catalog.pg_tables where schemaname = 'public'";
-                using (NpgsqlCommand PostGrsCmd = new NpgsqlCommand(query, conn))
-                {
-                    using (NpgsqlDataReader PostRead = PostGrsCmd.ExecuteReader())
-                    {
-                        while (PostRead.Read())
-                        {
-                            TableNames.Add(PostRead.GetString(0));
-                        }
-                    }
-                }
-                conn.Close();
-                //create schema for each table and execute in sqlserver
-                foreach (string TableNm in TableNames)
-                    {
-                    var sqlselect = new StringBuilder();
-                    try
-                        {
-                            string sql = "SELECT * FROM public.\"" + TableNm + "\" where 1 = 0"; //variable 
-                            //SELECT* FROM public."AO_3A3ECC_REMOTE_IDCF" WHERE 1 = 0;
-                            conn.Open();
-                            NpgsqlCommand cmd = new NpgsqlCommand(sql, conn);
-                            NpgsqlDataReader reader = cmd.ExecuteReader();
-                            DataTable schema = reader.GetSchemaTable();
-                            conn.Close();
-
-                            //get schema of a table (example)
-                            sqlselect.Append("CREATE TABLE ");
-                            sqlselect.Append(TableNm);  //variable
-                            sqlselect.Append(" (");
-                            List<ColumnDetails> lstColumnDetails = new List<ColumnDetails>();
-
-                            int i = 0;
-                            foreach (DataRow row in schema.Rows)
-                            {
-                                i = i + 1;
-                                string SQLDatatype;
-                                if (i != schema.Rows.Count)
-                                {
-                                    sqlselect.Append("["+ row["COLUMNNAME"].ToString() + "]" + "  ");
-                                    SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
-                                    sqlselect.Append(SQLDatatype  + ","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
-                                    lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype,  row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
-                                }
-                                else
-                                {
-                                    sqlselect.Append("[" + row["COLUMNNAME"].ToString() + "]" + "  ");
-                                    SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
-                                    sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString()) + ")"); //pass the system datatype to a function and get sql datatype
-                                    lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype, row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
-                                 }
-                            }
-
-                            var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
-                            var command = new SqlCommand(sqlselect.ToString(), connection);
-                            // Create table in destination sql database to hold file data
-                            connection.Open();
-                            command.ExecuteNonQuery();
-                            Log_TableEntry(TableNm, sqlselect.ToString(), "Success" );
-                            Log_TableColumnEntry(lstColumnDetails);
-                            Console.WriteLine("Success, Created Table: " + TableNm);
-                            connection.Close();
-                        }
-                        catch (Exception ex)
-                        {
-                            Log_TableEntry(TableNm, sqlselect.ToString(), "Failure");
-                            Console.WriteLine("Failed, Creating Table: " + TableNm);
-                        }
-                    //}
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
-
-        public class ColumnDetails
-        {
-            public ColumnDetails(string TABLE_NAME, string COLUMN_NAME, string SOURCE_COLUMN_DATATYPE, string DESTINATION_COLUMN_DATATYPE, string COLUMN_PRECISION, string COLUMN_SCALE, string COLUMN_ISNULL)
-            {
-                this.TABLE_NAME = TABLE_NAME;
-                this.COLUMN_NAME = COLUMN_NAME;
-                this.SOURCE_COLUMN_DATATYPE = SOURCE_COLUMN_DATATYPE;
-                this.DESTINATION_COLUMN_DATATYPE = DESTINATION_COLUMN_DATATYPE;
-                this.COLUMN_PRECISION = COLUMN_PRECISION;
-                this.COLUMN_SCALE = COLUMN_SCALE;
-                this.COLUMN_ISNULL = COLUMN_ISNULL;
-            }
-            public string TABLE_NAME { set; get; }
-            public string COLUMN_NAME { set; get; }
-            public string SOURCE_COLUMN_DATATYPE { set; get; }
-            public string DESTINATION_COLUMN_DATATYPE { set; get; }
-            public string COLUMN_PRECISION { set; get; }
-            public string COLUMN_SCALE { set; get; }
-            public string COLUMN_ISNULL { set; get; }
-        }
-
-        public string GetSQLDataType(string postgresqltype, string length, string precision, string scale, string providertype)
-        {
-            string sqltype = null;
-            switch (postgresqltype)
-            {
-                case "System.Int32":
-                    sqltype = "INT";
-                    break;
-                case "System.Int64":
-                    sqltype = "BIGINT";
-                    break;
-                case "System.String":
-                    if (Int32.Parse(length) > 0 && providertype == "varchar")
-                    {
-                        sqltype = "NVARCHAR(" + length + ")";  //PASS LENGTH
-                    }
-                    else if (providertype == "text")
-                    {
-                        sqltype = "NVARCHAR(MAX)";
-                    }
-                    else
-                    {
-                        sqltype = "NVARCHAR(255)";   //DEFAULT
-                    }
-                    break;
-                case "System.Boolean[]":
-                    sqltype = "BIT";
-                    break;
-                case "System.DateTime":
-                    sqltype = "DATETIME";
-                    break;
-                case "System.Decimal":
-                    if (precision != "0")
-                    {
-                        sqltype = "DECIMAL(" + precision + "," + scale + ")";
-                    }       
-                    else
-                    {
-                        sqltype = "DECIMAL(18,0)"; //DEFAULT
-                    }
-                        break;
-                default:
-                    sqltype = "NVARCHAR(255)";   //DEFAULT
-                    break;
-                    //TEXT , NTEXT and IMAGE data types of SQL Server 2000 will be deprecated in future version of SQL Server, 
-                    //SQL Server 2005 provides backward compatibility to data types but it is recommended to use new data types 
-                    //which are VARCHAR(MAX) , NVARCHAR(MAX) and VARBINARY(MAX) . ... nvarchar(max) is what you want to be 
-            }
-            return sqltype;
-        }
-
-        public void CreatePackage(string entity , string filepath)
-        {
-            try
-            {
-                Console.Title = "File Loader";
+                Console.Title = "SSIS Automation";
                 Console.ForegroundColor = ConsoleColor.Yellow;
 
                 //// Read input parameters
@@ -303,6 +72,7 @@ namespace SSISPackageAutomation
 
                 // Create a new SSIS Package
                 var package = new Package();
+                
                 SSISConnection conn = new SSISConnection();
                 package.ProtectionLevel = DTSProtectionLevel.DontSaveSensitive;
 
@@ -548,76 +318,7 @@ namespace SSISPackageAutomation
                 Console.ReadKey();
             }
         }
-
-        public void Log_TableEntry(string TableName, string Schema, string Status)
-        {
-            try
-            {
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
-                connection.Open();
-                SqlCommand cmd = new SqlCommand("insert into LOG_SCHEMA_TABLE (TABLE_NAME, SCHEMA_RAW, SCHEMA_STATUS, SCHEMA_ISSUES, CREATION_DATE) values ('" + TableName + "', '" + Schema + "', '" + Status + "', 'No', '" + DateTime.Now + "')", connection);
-                cmd.ExecuteNonQuery();
-                connection.Close();
-            }
-            catch (Exception e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Hey der...Exception Occured while inserting into table LOG_SHCEMA_TABLE: " + e.Message + "\t" + e.GetType() + "Press any key to close....");
-                Console.ReadKey();
-            }
-          //  Console.ReadKey();
-        }
-
-        public void Log_TableColumnEntry(List<ColumnDetails> list)
-        {
-            try
-            {
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
-                connection.Open();
-                SqlCommand cmd = new SqlCommand("INSERT INTO LOG_SCHEMA_COLUMN (TABLE_NAME, COLUMN_NAME, SOURCE_COLUMN_DATATYPE, DESTINATION_COLUMN_DATATYPE, COLUMN_PRECISION, COLUMN_SCALE, COLUMN_ISNULL) VALUES (@param1, @param2, @param3,@param4, @param5, @param6, @param7)");
-                cmd.CommandType = CommandType.Text;
-                cmd.Connection = connection;
-                cmd.Parameters.AddWithValue("@param1", DbType.String);
-                cmd.Parameters.AddWithValue("@param2", DbType.String);
-                cmd.Parameters.AddWithValue("@param3", DbType.String);
-                cmd.Parameters.AddWithValue("@param4", DbType.String);
-                cmd.Parameters.AddWithValue("@param5", DbType.Int16);
-                cmd.Parameters.AddWithValue("@param6", DbType.Int16);
-                cmd.Parameters.AddWithValue("@param7", DbType.String);
-                foreach (var item in list)
-                {
-                    cmd.Parameters[0].Value = item.TABLE_NAME;
-                    cmd.Parameters[1].Value = item.COLUMN_NAME;
-                    cmd.Parameters[2].Value = item.SOURCE_COLUMN_DATATYPE;
-                    cmd.Parameters[3].Value = item.DESTINATION_COLUMN_DATATYPE;
-                    cmd.Parameters[4].Value = item.COLUMN_PRECISION;
-                    cmd.Parameters[5].Value = item.COLUMN_SCALE;
-                    cmd.Parameters[6].Value = item.COLUMN_ISNULL;
-                    cmd.ExecuteNonQuery();
-                }
-                connection.Close();
-            }
-            catch (Exception e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Exception Occre while inserting into table LOG_SCHEMA_COLUMN" + e.Message + "\t" + e.GetType());
-            }
-        }
-
-        public IDTSComponentMetaData100 AddComponentToDataFlow(MainPipe mp, string Component)
-        {
-            if (mp != null)
-            {
-                IDTSComponentMetaData100 md = mp.ComponentMetaDataCollection.New();
-                md.ComponentClassID = Component;
-                CManagedComponentWrapper wrp = md.Instantiate();
-                wrp.ProvideComponentProperties();
-
-                return md;
-            }
-            throw new Exception("DataFlow task does not exist.");
-        }
-
+        
         public string GetTruncateScript(List<String> List)
         {
             string TruncateScript = "";
@@ -627,10 +328,7 @@ namespace SSISPackageAutomation
             }
             return TruncateScript;
         }
-
     }
-
-   
 
     //USE JIRA_ODS
 
