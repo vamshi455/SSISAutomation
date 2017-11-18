@@ -17,3 +17,8 @@ C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\fi\
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\fr\Npgsql.resources.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\ja\Npgsql.resources.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\zh-CN\Npgsql.resources.dll
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\Microsoft.WindowsAPICodePack.dll
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\Microsoft.WindowsAPICodePack.ExtendedLinguisticServices.dll
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\Microsoft.WindowsAPICodePack.Sensors.dll
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\Microsoft.WindowsAPICodePack.Shell.dll
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\PACKAGE\bin\Debug\Microsoft.WindowsAPICodePack.ShellExtensions.dll

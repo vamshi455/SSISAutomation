@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace SSISPackageAutomation
 {
-    class CreatePackage
+     public class CreatePackage
     {
         static int PackageCount = 0;
         static int Main(string[] args)

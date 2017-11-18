@@ -9,16 +9,16 @@ using Npgsql;
 using System.Data;
 using System.Collections.Generic;
 
-namespace AUTOSCHEMA
+namespace SSISPackageAutomation
 {
-    class CreateSchema
+    public class CreateSchema
     {
         static void Main(string[] args)
         {
             try
             {
                 CreateSchema pg = new CreateSchema();
-                pg.GetPostGreSQLSchema();
+                //pg.GetPostGreSQLSchema();
             }
             catch (Exception ex)
             {
@@ -28,13 +28,16 @@ namespace AUTOSCHEMA
             //commit
         }
 
-        public void GetPostGreSQLSchema()
+        public int GetPostGreSQLSchema(string server, string port, string userID, string password, string database)
         {
             try
             {
                 //get connect to postgresql
                 //String connstring = String.Format("Server ={0}; Port ={1}; User Id = {2}; Password ={3}; Database ={4};","localhost","5432", "vams3203", "123456", "NEWDB");
-                string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
+                // string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
+
+                string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", server, port, userID, password, database); //source
+               
                 NpgsqlConnection conn = new NpgsqlConnection(connstring);
                 conn.Open();
                 //string sqldrop = ""
@@ -97,26 +100,28 @@ namespace AUTOSCHEMA
                         // Create table in destination sql database to hold file data
                         connection.Open();
                         command.ExecuteNonQuery();
+                        
                         Log_TableEntry(TableNm, sqlselect.ToString(), "Success");
                         Log_TableColumnEntry(lstColumnDetails);
                         Console.WriteLine("Success, Created Table: " + TableNm);
                         connection.Close();
+                        return 1;
                     }
                     catch (Exception ex)
                     {
                         Log_TableEntry(TableNm, sqlselect.ToString(), "Failure");
-                        Console.WriteLine("Failed, Creating Table: " + TableNm);
+                        return 0;
+                        //Console.WriteLine("Failed, Creating Table: " + TableNm);
                     }
-                    //}
                 }
+                return 0;
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error occured while generating schema" + ex.Message + "\t" + ex.GetType());
+                return 0;
             }
         }
-
+        
         public void Log_TableEntry(string TableName, string Schema, string Status)
         {
             try
