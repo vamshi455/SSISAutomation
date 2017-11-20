@@ -6,12 +6,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{2A2AD091-FAF7-493B-B6A8-7BA21512ADC3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>GUI</RootNamespace>
-    <AssemblyName>AutoDB-ETL</AssemblyName>
+    <RootNamespace>AutoDBETL</RootNamespace>
+    <AssemblyName>AutoDBETL</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,7 +25,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -111,6 +111,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SSISConnection.cs" />
     <EmbeddedResource Include="AutoGenerate.resx">
       <DependentUpon>AutoGenerate.cs</DependentUpon>
     </EmbeddedResource>
@@ -137,16 +138,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PACKAGE\Package.csproj">
-      <Project>{0bffc366-9698-48a7-9913-33185f298385}</Project>
-      <Name>Package</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SCHEMA\Schema.csproj">
-      <Project>{86216fd9-9d12-477e-b782-b0340fdf659a}</Project>
-      <Name>Schema</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">

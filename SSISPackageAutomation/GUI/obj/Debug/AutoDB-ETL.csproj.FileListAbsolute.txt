@@ -1,8 +1,3 @@
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDB-ETL.exe.config
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDB-ETL.exe
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDB-ETL.pdb
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AUTOSCHEMA.exe
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\CreatePackage.exe
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Microsoft.SQLServer.ManagedDTS.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Microsoft.SqlServer.PipelineHost.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Microsoft.WindowsAPICodePack.dll
@@ -12,10 +7,6 @@ C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Microso
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Microsoft.WindowsAPICodePack.ShellExtensions.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Npgsql.dll
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Mono.Security.dll
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\CreatePackage.pdb
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\CreatePackage.exe.config
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AUTOSCHEMA.pdb
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AUTOSCHEMA.exe.config
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Npgsql.pdb
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\Npgsql.xml
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\de\Npgsql.resources.dll
@@ -27,8 +18,11 @@ C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\zh-CN\N
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.csprojResolveAssemblyReference.cache
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.csproj.ResolveComReference.cache
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\GUI.AutoGenerate.resources
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\GUI.Properties.Resources.resources
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.csproj.GenerateResource.Cache
 C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.csproj.CoreCompileInputs.cache
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.exe
-C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDB-ETL.pdb
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDBETL.exe.config
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDBETL.exe
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\bin\Debug\AutoDBETL.pdb
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDBETL.Properties.Resources.resources
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDBETL.exe
+C:\vamshi\GIT\SSIS PackageAutomation\SSISPackageAutomation\GUI\obj\Debug\AutoDBETL.pdb

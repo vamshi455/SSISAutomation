@@ -9,22 +9,24 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using Npgsql;
-using  SSISPackageAutomation;
 using System.Data.SqlClient;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop;
 using Microsoft.SqlServer.Dts.Runtime;
 using Microsoft.SqlServer.Dts.Pipeline.Wrapper;
 using Wrapper = Microsoft.SqlServer.Dts.Runtime.Wrapper;
+using SSISPackageAutomation;
 
 namespace GUI
 {
     public partial class AutoGenerate : Form
     {
+        string Source_connectionstring = "";
+        string Destination_connectionstring = "";
+
         public AutoGenerate()
         {
             InitializeComponent();
-
             cmb_SrcServer.SelectedIndex = 0;
             txtSrcServer.Text = "d-db1n2.shr.ord1.corp.rackspace.net";
             txtSrcDB.Text = "jira_staging_ebi";
@@ -36,35 +38,50 @@ namespace GUI
             txtDestServer.Text = "ebi-etl-dev-01";
             txtDestDB.Text = "JIRA_ODS";
             chkDestWindowsAuth.Text = "Windows Authentication";
+            chkDestWindowsAuth.Checked = true;
 
-            populateComboDropdown();
           
+
+            Source_connectionstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", txtSrcServer.Text, txtSrcPort.Text, txtSrcUserID.Text, txtSrcPwd.Text, txtSrcDB.Text); //source
+            if (chkDestWindowsAuth.Checked)
+            {
+                Destination_connectionstring = String.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", txtDestServer.Text, txtDestDB.Text); //source
+            }
+            else
+            {
+                Destination_connectionstring = String.Format("Data Source={0};Initial Catalog={1};User Id={2}; password= {3}", txtDestServer.Text, txtDestDB.Text, txtDestUserID.Text, txtDestPwd.Text); //source
+            }
+            populateComboDropdown();
 
         }
         List<string> EntityListGlobal = new List<string>();
-
+        
         private void populateComboDropdown()
         {
-            string connectionstring = string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS");
-            DataRow dr;
-            DataTable dt;
-            using (SqlConnection con = new SqlConnection(connectionstring))
+            try
             {
-                using (SqlCommand cmd = new SqlCommand("SELECT ENTITY FROM (SELECT 'ALL' ENTITY  UNION ALL SELECT SUBSTRING(TABLE_NAME,0,5) ENTITY FROM LOG_SCHEMA_TABLE GROUP BY SUBSTRING(TABLE_NAME,0,5)) A ORDER BY ENTITY ASC", con))
+                using (SqlConnection con = new SqlConnection(Destination_connectionstring))
                 {
-                    cmd.CommandType = CommandType.Text;
-                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    using (SqlCommand cmd = new SqlCommand("SELECT ENTITY FROM (SELECT 'ALL' ENTITY  UNION ALL SELECT SUBSTRING(TABLE_NAME,0,5) ENTITY FROM LOG_SCHEMA_TABLE GROUP BY SUBSTRING(TABLE_NAME,0,5)) A ORDER BY ENTITY ASC", con))
                     {
-                        using (DataSet ds = new DataSet())
+                        cmd.CommandType = CommandType.Text;
+                        using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
                         {
-                            sda.Fill(ds);
-                            checkedListBox1.DataSource = ds.Tables[0];
-                            checkedListBox1.DisplayMember = "ENTITY";
-                            checkedListBox1.ClearSelected();
-                            con.Close();
+                            using (DataSet ds = new DataSet())
+                            {
+                                sda.Fill(ds);
+                                checkedListBox1.DataSource = ds.Tables[0];
+                                checkedListBox1.DisplayMember = "ENTITY";
+                                checkedListBox1.ClearSelected();
+                                con.Close();
+                            }
                         }
                     }
                 }
+            }
+            catch
+            {
+
             }
         }
 
@@ -90,7 +107,7 @@ namespace GUI
         {
             try
             {
-                string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", txtSrcServer.Text, txtSrcPort.Text, txtSrcUserID.Text, txtSrcPwd.Text, txtSrcDB.Text); //source
+                string connstring = Source_connectionstring; //source
                 // string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
                 NpgsqlConnection conn = new NpgsqlConnection(connstring);
                 conn.Open();
@@ -107,12 +124,7 @@ namespace GUI
         {
             try
             {
-                var connstring = string.Empty;
-                if (chkDestWindowsAuth.Checked)
-                    connstring = String.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", txtDestServer.Text, txtDestDB.Text); //source
-                else
-                    connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", txtDestServer.Text, txtDestPort.Text, txtDestUserID.Text, txtDestPwd.Text, txtDestDB.Text); //source
-
+                var connstring = Destination_connectionstring;
                 SqlConnection conn = new SqlConnection(connstring);
                 conn.Open();
                 MessageBox.Show("connection successful");
@@ -129,7 +141,7 @@ namespace GUI
             try
             {
                 GetPostGreSQLSchema(txtSrcServer.Text, txtSrcPort.Text,txtSrcUserID.Text,txtSrcPwd.Text,txtSrcDB.Text);
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                var connection = new SqlConnection(Destination_connectionstring);
                 var command = new SqlCommand("SELECT  TABLE_NAME, SCHEMA_STATUS, SCHEMA_ISSUES, SUPPORTS_INCREMENTAL, SCHEMA_RAW  FROM  LOG_SCHEMA_TABLE", connection);
                 connection.Open();
                 SqlDataAdapter da = new SqlDataAdapter(command);
@@ -172,7 +184,7 @@ namespace GUI
                     {
                         if (lstboxEntities.Items.ContainsKey("ALL"))
                         {
-                            string connectionstring = string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS");
+                            string connectionstring = Destination_connectionstring;
                             //DataRow dr;
                             DataTable dt;
                             using (SqlConnection con = new SqlConnection(connectionstring))
@@ -286,7 +298,7 @@ namespace GUI
                 this.lblOutput.Visible = true;
                 this.lblOutput.Text = "Preparing to generate schema...";
                 this.lblOutput.ForeColor = System.Drawing.Color.Green;
-                string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", server, port, userID, password, database); //source
+                string connstring = Source_connectionstring; //source
 
                 NpgsqlConnection conn = new NpgsqlConnection(connstring);
                 conn.Open();
@@ -345,7 +357,7 @@ namespace GUI
                             }
                         }
 
-                        var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                        var connection = new SqlConnection(Destination_connectionstring);
                         var command = new SqlCommand(sqlselect.ToString(), connection);
                         // Create table in destination sql database to hold file data
                         connection.Open();
@@ -378,7 +390,7 @@ namespace GUI
         {
             try
             {
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                var connection = new SqlConnection(Destination_connectionstring);
                 connection.Open();
                 SqlCommand cmd = new SqlCommand("insert into LOG_SCHEMA_TABLE (TABLE_NAME, SCHEMA_RAW, SCHEMA_STATUS, SCHEMA_ISSUES, CREATION_DATE) values ('" + TableName + "', '" + Schema + "', '" + Status + "', 'No', '" + DateTime.Now + "')", connection);
                 cmd.ExecuteNonQuery();
@@ -397,7 +409,7 @@ namespace GUI
         {
             try
             {
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                var connection = new SqlConnection(Destination_connectionstring);
                 connection.Open();
                 SqlCommand cmd = new SqlCommand("INSERT INTO LOG_SCHEMA_COLUMN (TABLE_NAME, COLUMN_NAME, SOURCE_COLUMN_DATATYPE, DESTINATION_COLUMN_DATATYPE, COLUMN_PRECISION, COLUMN_SCALE, COLUMN_ISNULL) VALUES (@param1, @param2, @param3,@param4, @param5, @param6, @param7)");
                 cmd.CommandType = CommandType.Text;
@@ -511,7 +523,7 @@ namespace GUI
             try
             {
                 //show the log shcema in datagrid  
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                var connection = new SqlConnection(Destination_connectionstring);
                 var command = new SqlCommand("SELECT  TABLE_NAME, COLUMN_NAME, SOURCE_COLUMN_DATATYPE, DESTINATION_COLUMN_DATATYPE, COLUMN_PRECISION AS SOURCE_PRECISION, COLUMN_SCALE AS SOURCE_SCALE, COLUMN_ISNULL FROM  LOG_SCHEMA_COLUMN", connection);
                 // Create table in destination sql database to hold file data
                 connection.Open();
@@ -591,7 +603,7 @@ namespace GUI
         {
             List<string> names = entity.Split(',').ToList<string>();
             names.Reverse();
-            var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+            var connection = new SqlConnection(Destination_connectionstring);
             connection.Open();
             List<String> TableNames = new List<String>();
             string query = "";
@@ -617,7 +629,7 @@ namespace GUI
         {
             try
             {
-                var connection = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                var connection = new SqlConnection(Destination_connectionstring);
                 connection.Open();
                 string sqlTablequery = " IF NOT EXISTS(SELECT * FROM SYSOBJECTS WHERE NAME = 'LOG_SCHEMA_TABLE' AND XTYPE = 'U')"
                                      + " CREATE TABLE LOG_SCHEMA_TABLE"
@@ -694,8 +706,8 @@ namespace GUI
                 ConnectionManager ConMgr;
                 ConMgr = package.Connections.Add("ODBC");
                 //ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=localhost;uid=vams3203;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
-                ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=d-db1n2.shr.ord1.corp.rackspace.net;uid=vams3203;database=jira_staging_ebi;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
-                ConMgr.Name = "JIRA_ODS POSTGRESQL_SOURCE";
+                ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server="+txtSrcServer.Text+";uid="+txtSrcUserID+";database="+txtSrcDB.Text+";port="+txtSrcPort.Text+";sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                ConMgr.Name = "ODBC_SRC_" + txtSrcDB.Text;
                 ConMgr.Description = "ODBC Connection for PostGreSQL Database";
 
                 // Add a Connection Manager to the Package, of type, OLEDB 
@@ -775,7 +787,7 @@ namespace GUI
                                 //only one column datatype is converted to different datatype
                                 //GET DATA COLUMNS OF TYPE NVARCHAR FROM SQL SERVER BY TABLE NAME
                                 //<list> column = GetColumnNVarcharFromTable(TableNm);
-                                var connection_column = new SqlConnection(string.Format("Data Source={0};Initial Catalog={1};Integrated Security=TRUE;", "EBI-ETL-DEV-01", "JIRA_ODS"));
+                                var connection_column = new SqlConnection(Destination_connectionstring);
                                 connection_column.Open();
                                 List<String> NvarcharColumns = new List<String>();
                                 string Query = "SELECT COLUMN_NAME FROM LOG_SCHEMA_COLUMN WHERE TABLE_NAME LIKE '" + TableNm + "' AND DESTINATION_COLUMN_DATATYPE LIKE 'NVARCHAR%' AND DESTINATION_COLUMN_DATATYPE <> 'NVARCHAR(MAX)'";
@@ -887,7 +899,6 @@ namespace GUI
                                 this.lblOutput.ForeColor = System.Drawing.Color.Red;
                                 //Console.ReadKey();
                             }
-
                         }
                     }
 
@@ -989,10 +1000,32 @@ namespace GUI
                 lstVwItem = lstboxEntities.FindItemWithText(Entity);
                 if (lstVwItem == null)
                 {
-                    lstboxEntities.Items.Add(Entity);
+                    //lstboxEntities.Items.Add();
+                    lstboxEntities.Items.Add(new ListViewItem(new[] { GetEntityTables(Entity) }));
                     EntityListGlobal.Add(Entity);
                 }
             }
+        }
+
+        private String GetEntityTables(String Entity)
+        {
+            string TablesCommanSeperated = "";
+            string connectionstring = Destination_connectionstring;
+            SqlConnection sqlcon = new SqlConnection(connectionstring);
+            //SqlCommand sqlcmd = new SqlCommand("", sqlcon);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT TABLE_NAME FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'AO_0%'", sqlcon);
+            DataSet ds = new DataSet();
+            da.Fill(ds);
+            if (ds.Tables.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    TablesCommanSeperated = TablesCommanSeperated + ds.Tables[0].Rows[i]["TABLE_NAME"].ToString();
+                    TablesCommanSeperated += (i < ds.Tables[0].Rows.Count) ? "," : string.Empty;
+                }
+                return TablesCommanSeperated;
+            }
+            return TablesCommanSeperated;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -1004,6 +1037,40 @@ namespace GUI
         {
             e.ItemHeight = 30;
         }
-      
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel1_Paint_1(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel3_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void lstboxEntities_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pnlPackage_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel4_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void gdvw_Output_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
 }
