@@ -24,6 +24,14 @@ namespace SSISPackageAutomation
             ConMgr.Description = "OLE DB connection to the PostGreSQL Database";
         }
 
+        public void CreateADONETConnection(Package p)
+        {
+            ConMgr = p.Connections.Add("ADO");
+            ConMgr.ConnectionString = "server=localhost;user id=root;database=world;";
+            ConMgr.Name = "SSIS Connection Manager for ODBC to connect MYSQL";
+            ConMgr.Description = "ADO.NET connection to the MYSQL Database";
+        }
+
         public void CreateFileConnection(Package p)
         {
             ConMgr = p.Connections.Add("File");

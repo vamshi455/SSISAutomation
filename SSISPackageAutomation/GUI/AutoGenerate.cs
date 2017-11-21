@@ -28,19 +28,17 @@ namespace GUI
         {
             InitializeComponent();
             cmb_SrcServer.SelectedIndex = 0;
-            txtSrcServer.Text = "d-db1n2.shr.ord1.corp.rackspace.net";
-            txtSrcDB.Text = "jira_staging_ebi";
-            txtSrcPort.Text = "5432";
-            txtSrcUserID.Text = "vams3203";
-            txtSrcPwd.Text = "";
+            //txtSrcServer.Text = "d-db1n2.shr.ord1.corp.rackspace.net";
+            //txtSrcDB.Text = "jira_staging_ebi";
+            //txtSrcPort.Text = "5432";
+            //txtSrcUserID.Text = "vams3203";
+            //txtSrcPwd.Text = "";
 
             cmb_destServer.SelectedIndex = 3;
             txtDestServer.Text = "ebi-etl-dev-01";
             txtDestDB.Text = "JIRA_ODS";
             chkDestWindowsAuth.Text = "Windows Authentication";
             chkDestWindowsAuth.Checked = true;
-
-          
 
             Source_connectionstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", txtSrcServer.Text, txtSrcPort.Text, txtSrcUserID.Text, txtSrcPwd.Text, txtSrcDB.Text); //source
             if (chkDestWindowsAuth.Checked)
@@ -55,7 +53,7 @@ namespace GUI
 
         }
         List<string> EntityListGlobal = new List<string>();
-        
+
         private void populateComboDropdown()
         {
             try
@@ -103,58 +101,73 @@ namespace GUI
 
         }
 
-        private void btnSrcTestConnection_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                string connstring = Source_connectionstring; //source
-                // string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
-                NpgsqlConnection conn = new NpgsqlConnection(connstring);
-                conn.Open();
-                MessageBox.Show("connection successful");
-                conn.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("connection failed..");
-            }
-        }
-
-        private void btnDestConnection_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var connstring = Destination_connectionstring;
-                SqlConnection conn = new SqlConnection(connstring);
-                conn.Open();
-                MessageBox.Show("connection successful");
-                conn.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("connection failed..");
-            }
-        }
-
         private void btnGenerateSchema_Click(object sender, EventArgs e)
         {
             try
             {
-                GetPostGreSQLSchema(txtSrcServer.Text, txtSrcPort.Text,txtSrcUserID.Text,txtSrcPwd.Text,txtSrcDB.Text);
-                var connection = new SqlConnection(Destination_connectionstring);
-                var command = new SqlCommand("SELECT  TABLE_NAME, SCHEMA_STATUS, SCHEMA_ISSUES, SUPPORTS_INCREMENTAL, SCHEMA_RAW  FROM  LOG_SCHEMA_TABLE", connection);
-                connection.Open();
-                SqlDataAdapter da = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                lblOutput.Text = "";
-                gdvw_Output.DataSource = dt;
-                gdvw_Output.AutoResizeColumns();
+                //PostGreSQL
+                //MySQL
+                //Oracle
+                //SQL Server
+
+
+                //validate connection string:
+                Boolean valid = validateInput();
+                if (valid)
+                {
+
+                    if (cmb_SrcServer.SelectedItem.ToString() == "PostGreSQL")
+                    {
+                        GetPostGreSQLSchema(txtSrcServer.Text, txtSrcPort.Text, txtSrcUserID.Text, txtSrcPwd.Text, txtSrcDB.Text);
+                        gdvw_Output.AutoResizeColumns();
+                    }
+                    else if (cmb_SrcServer.SelectedItem.ToString() == "MySQL")
+                    {
+                        GetMySQLSchema(txtSrcServer.Text, txtSrcPort.Text, txtSrcUserID.Text, txtSrcPwd.Text, txtSrcDB.Text);
+                    }
+
+                    var connection = new SqlConnection(Destination_connectionstring);
+                    var command = new SqlCommand("SELECT  TABLE_NAME, SCHEMA_STATUS, SCHEMA_ISSUES, SUPPORTS_INCREMENTAL, SCHEMA_RAW  FROM  LOG_SCHEMA_TABLE", connection);
+                    connection.Open();
+                    SqlDataAdapter da = new SqlDataAdapter(command);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    lblOutput.Text = "";
+                    gdvw_Output.DataSource = dt;
+                }
             }
             catch (Exception ex)
             {
                 lblOutput.Refresh();
                 lblOutput.Text = "Cannot initiate schema generation" + ex.Message + "\t" + ex.GetType();
+            }
+        }
+
+        private Boolean validateInput()
+        {
+            if (txtSrcServer.Text == "" || txtSrcDB.Text == "" || txtSrcPort.Text == "" || txtSrcUserID.Text == "")
+            {
+                MessageBox.Show("Please enter all the fields");
+                return false;
+            }
+            else
+            {
+                if (cmb_SrcServer.SelectedItem == "PostGreSQL")
+                {
+                    try
+                    {
+                        string connstring = Source_connectionstring; //source
+                        NpgsqlConnection conn = new NpgsqlConnection(connstring);
+                        conn.Open();
+                        conn.Close();
+                        return true;
+                    }
+                    catch(Exception ex)
+                    {
+                        MessageBox.Show("Source Connection Failed");
+                    }
+                }
+                return false;
             }
         }
 
@@ -207,7 +220,7 @@ namespace GUI
                                                 {
                                                     foreach(DataRow dr in ds.Tables[0].Rows)
                                                     {
-                                                        GeneratePackage("", txtFolderPath.Text);
+                                                        GeneratePackage_PostgreSQL("", txtFolderPath.Text);
                                                     }
                                                 }
                                             }
@@ -232,7 +245,7 @@ namespace GUI
                                     Entities += item.ToString();
                                 }
                             }
-                            GeneratePackage(Entities, txtFolderPath.Text);
+                            GeneratePackage_PostgreSQL(Entities, txtFolderPath.Text);
                         }
                     }
                   
@@ -242,29 +255,6 @@ namespace GUI
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Cannot initiate schema generation" + ex.Message + "\t" + ex.GetType());
                 }
-            }
-        }
-
-        private void chkDestWindowsAuth_CheckedChanged(object sender, EventArgs e)
-        {
-            if (chkDestWindowsAuth.Checked)
-            {
-                txtDestPort.Visible = false;
-                txtDestUserID.Visible = false;
-                txtDestPwd.Visible = false;
-                lblDestPort.Visible = false;
-                lblDestUserID.Visible = false;
-                lblDestPwd.Visible = false;
-
-            }
-            else
-            {
-                txtDestPort.Visible = true;
-                txtDestUserID.Visible = true;
-                txtDestPwd.Visible = true;
-                lblDestPort.Visible = true;
-                lblDestUserID.Visible = true;
-                lblDestPwd.Visible = true;
             }
         }
 
@@ -289,6 +279,104 @@ namespace GUI
         }
 
         public void GetPostGreSQLSchema(string server, string port, string userID, string password, string database)
+        {
+            try
+            {
+                //get connect to postgresql
+                //String connstring = String.Format("Server ={0}; Port ={1}; User Id = {2}; Password ={3}; Database ={4};","localhost","5432", "vams3203", "123456", "NEWDB");
+                // string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
+                this.lblOutput.Visible = true;
+                this.lblOutput.Text = "Preparing to generate schema...";
+                this.lblOutput.ForeColor = System.Drawing.Color.Green;
+                string connstring = Source_connectionstring; //source
+
+                NpgsqlConnection conn = new NpgsqlConnection(connstring);
+                conn.Open();
+                //string sqldrop = ""
+                List<String> TableNames = new List<String>();
+                string query = "select tablename from pg_catalog.pg_tables where schemaname = 'public'";
+                using (NpgsqlCommand PostGrsCmd = new NpgsqlCommand(query, conn))
+                {
+                    using (NpgsqlDataReader PostRead = PostGrsCmd.ExecuteReader())
+                    {
+                        while (PostRead.Read())
+                        {
+                            TableNames.Add(PostRead.GetString(0));
+                        }
+                    }
+                }
+                conn.Close();
+                //create schema for each table and execute in sqlserver
+                foreach (string TableNm in TableNames)
+                {
+                    var sqlselect = new StringBuilder();
+                    try
+                    {
+                        string sql = "SELECT * FROM public.\"" + TableNm + "\" where 1 = 0"; //variable 
+                                                                                             //SELECT* FROM public."AO_3A3ECC_REMOTE_IDCF" WHERE 1 = 0;
+                        conn.Open();
+                        NpgsqlCommand cmd = new NpgsqlCommand(sql, conn);
+                        NpgsqlDataReader reader = cmd.ExecuteReader();
+                        DataTable schema = reader.GetSchemaTable();
+                        conn.Close();
+
+                        //get schema of a table (example)
+                        sqlselect.Append("CREATE TABLE ");
+                        sqlselect.Append(TableNm);  //variable
+                        sqlselect.Append(" (");
+                        List<ColumnDetails> lstColumnDetails = new List<ColumnDetails>();
+
+                        int i = 0;
+                        foreach (DataRow row in schema.Rows)
+                        {
+                            i = i + 1;
+                            string SQLDatatype;
+                            if (i != schema.Rows.Count)
+                            {
+                                sqlselect.Append("[" + row["COLUMNNAME"].ToString() + "]" + "  ");
+                                SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
+                                sqlselect.Append(SQLDatatype + ","); //GetSQLDataType() pass the system datatype to a function and get sql datatype
+                                lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype, row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
+                            }
+                            else
+                            {
+                                sqlselect.Append("[" + row["COLUMNNAME"].ToString() + "]" + "  ");
+                                SQLDatatype = GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString());
+                                sqlselect.Append(GetSQLDataType(row["DATATYPE"].ToString(), row["COLUMNSIZE"].ToString(), row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["PROVIDERTYPE"].ToString()) + ")"); //pass the system datatype to a function and get sql datatype
+                                lstColumnDetails.Add(new ColumnDetails(TableNm, row["COLUMNNAME"].ToString(), row["DATATYPE"].ToString(), SQLDatatype, row["NUMERICPRECISION"].ToString(), row["NUMERICSCALE"].ToString(), row["AllowDBNull"].ToString()));
+                            }
+                        }
+
+                        var connection = new SqlConnection(Destination_connectionstring);
+                        var command = new SqlCommand(sqlselect.ToString(), connection);
+                        // Create table in destination sql database to hold file data
+                        connection.Open();
+                        command.ExecuteNonQuery();
+
+                        Log_TableEntry(TableNm, sqlselect.ToString(), "Success");
+                        Log_TableColumnEntry(lstColumnDetails);
+                        //Console.WriteLine("Success, Created Table: " + TableNm);
+                        this.lblOutput.Refresh();
+                        this.lblOutput.Text = "Creating Table: " + TableNm;
+                        connection.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log_TableEntry(TableNm, sqlselect.ToString(), "Failure");
+                        this.lblOutput.Refresh();
+                        this.lblOutput.Text = "Creating Table: " + TableNm;
+                        //Console.WriteLine("Failed, Creating Table: " + TableNm);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.lblOutput.Refresh();
+                this.lblOutput.Text = "Failed, Creating Table: " + ex.ToString();
+            }
+        }
+
+        public void GetMySQLSchema(string server, string port, string userID, string password, string database)
         {
             try
             {
@@ -678,7 +766,7 @@ namespace GUI
             }
         }
 
-        public void GeneratePackage(string Entity, string filepath)
+        public void GeneratePackage_PostgreSQL(string Entity, string filepath)
         {
             try
             {
@@ -706,9 +794,27 @@ namespace GUI
                 ConnectionManager ConMgr;
                 ConMgr = package.Connections.Add("ODBC");
                 //ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=localhost;uid=vams3203;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
-                ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server="+txtSrcServer.Text+";uid="+txtSrcUserID+";database="+txtSrcDB.Text+";port="+txtSrcPort.Text+";sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=" + txtSrcServer.Text + ";uid=" + txtSrcUserID + ";database=" + txtSrcDB.Text + ";port=" + txtSrcPort.Text + ";sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
                 ConMgr.Name = "ODBC_SRC_" + txtSrcDB.Text;
                 ConMgr.Description = "ODBC Connection for PostGreSQL Database";
+
+                //if (cmb_SrcServer.Text == "PostGreSQL")
+                //{
+                //    ConMgr = package.Connections.Add("ODBC");
+                //    //ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=localhost;uid=vams3203;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                //    ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=" + txtSrcServer.Text + ";uid=" + txtSrcUserID + ";database=" + txtSrcDB.Text + ";port=" + txtSrcPort.Text + ";sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                //    ConMgr.Name = "ODBC_SRC_" + txtSrcDB.Text;
+                //    ConMgr.Description = "ODBC Connection for PostGreSQL Database";
+                //}
+
+                //if (cmb_SrcServer.Text == "MySQL")
+                //{
+                //    ConMgr = package.Connections.Add("ADO");
+                //    //ConMgr.ConnectionString = "Dsn=PostgreSQL35W;server=localhost;uid=vams3203;database=NEWDB;port=5432;sslmode=disable;readonly=0;protocol=7.4;fakeoidindex=0;showoidcolumn=0;rowversioning=0;showsystemtables=0;fetch=100;unknownsizes=0;maxvarcharsize=255;maxlongvarcharsize=8190;debug=0;commlog=0;usedeclarefetch=0;textaslongvarchar=1;unknownsaslongvarchar=0;boolsaschar=1;parse=0;lfconversion=1;updatablecursors=1;trueisminus1=0;bi=0;byteaaslongvarbinary=1;useserversideprepare=1;lowercaseidentifier=0;gssauthusegss=0;xaopt=1";
+                //    ConMgr.ConnectionString = "server=" + txtSrcServer.Text + ";user id=" + txtSrcUserID.Text + ";database=" + txtSrcDB.Text;
+                //    ConMgr.Name = "ADO_SRC_" + txtSrcDB.Text;
+                //    ConMgr.Description = "ADO Connection for MYSQL Database";
+                //}
 
                 // Add a Connection Manager to the Package, of type, OLEDB 
                 var connMgrOleDb = package.Connections.Add("OLEDB");
@@ -964,18 +1070,6 @@ namespace GUI
             }
         }
        
-        private void button2_Click_1(object sender, EventArgs e)
-        {
-            using (var fbd = new FolderBrowserDialog())
-            {
-                DialogResult result = fbd.ShowDialog();
-                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-                {
-                    txtFolderPath.Text = fbd.SelectedPath;
-                }
-            }
-        }
-
         private void txtSrcServer_TextChanged(object sender, EventArgs e)
         {
 
@@ -987,33 +1081,21 @@ namespace GUI
             ExportToExcel();
         }
 
-        private void checkedListBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            string[] lines3 = new string[100];
-            
-            lstboxEntities.Clear();
-            foreach (var item in checkedListBox1.CheckedItems)
-            {
-                var row = (item as DataRowView).Row;
-                String Entity = row.ItemArray[0].ToString();
-                ListViewItem lstVwItem = new ListViewItem();
-                lstVwItem = lstboxEntities.FindItemWithText(Entity);
-                if (lstVwItem == null)
-                {
-                    //lstboxEntities.Items.Add();
-                    lstboxEntities.Items.Add(new ListViewItem(new[] { GetEntityTables(Entity) }));
-                    EntityListGlobal.Add(Entity);
-                }
-            }
-        }
-
         private String GetEntityTables(String Entity)
         {
             string TablesCommanSeperated = "";
             string connectionstring = Destination_connectionstring;
             SqlConnection sqlcon = new SqlConnection(connectionstring);
-            //SqlCommand sqlcmd = new SqlCommand("", sqlcon);
-            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT TABLE_NAME FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE 'AO_0%'", sqlcon);
+            string sqlcmd = "";
+            if (Entity == "ALL")
+            {
+                 sqlcmd = "SELECT DISTINCT TABLE_NAME FROM LOG_SCHEMA_TABLE";
+            }
+            else
+            {
+                sqlcmd = "SELECT DISTINCT TABLE_NAME FROM LOG_SCHEMA_TABLE WHERE TABLE_NAME LIKE '" + Entity + "%'";
+            }
+            SqlDataAdapter da = new SqlDataAdapter(sqlcmd,sqlcon);
             DataSet ds = new DataSet();
             da.Fill(ds);
             if (ds.Tables.Count > 0)
@@ -1028,24 +1110,9 @@ namespace GUI
             return TablesCommanSeperated;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            lstboxEntities.Items.Clear();
-        }
-
         private void lstboxEntities_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
         {
             e.ItemHeight = 30;
-        }
-
-        private void panel2_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void panel1_Paint_1(object sender, PaintEventArgs e)
-        {
-
         }
 
         private void panel3_Paint(object sender, PaintEventArgs e)
@@ -1071,6 +1138,99 @@ namespace GUI
         private void gdvw_Output_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+
+        private void checkedListBox1_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+            string[] lines3 = new string[100];
+
+            lstboxEntities.Clear();
+            foreach (var item in checkedListBox1.CheckedItems)
+            {
+                var row = (item as DataRowView).Row;
+                String Entity = row.ItemArray[0].ToString();
+                ListViewItem lstVwItem = new ListViewItem();
+                lstVwItem = lstboxEntities.FindItemWithText(Entity);
+                if (lstVwItem == null)
+                {
+                    //lstboxEntities.Items.Add();
+                    lstboxEntities.Items.Add(new ListViewItem(new[] { GetEntityTables(Entity) }));
+                    EntityListGlobal.Add(Entity);
+                }
+            }
+        }
+
+        private void btnSourceconnection_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string connstring = Source_connectionstring; //source
+                // string connstring = String.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "d-db1n2.shr.ord1.corp.rackspace.net", "5432", "vams3203", "", "jira_staging_ebi"); //source
+                NpgsqlConnection conn = new NpgsqlConnection(connstring);
+                conn.Open();
+                MessageBox.Show("connection successful");
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("connection failed..");
+            }
+        }
+
+        private void chkDestWindowsAuth_CheckedChanged_1(object sender, EventArgs e)
+        {
+            if (chkDestWindowsAuth.Checked)
+            {
+                txtDestPort.Visible = false;
+                txtDestUserID.Visible = false;
+                txtDestPwd.Visible = false;
+                lblDestPort.Visible = false;
+                lblDestUserID.Visible = false;
+                lblDestPwd.Visible = false;
+
+            }
+            else
+            {
+                txtDestPort.Visible = true;
+                txtDestUserID.Visible = true;
+                txtDestPwd.Visible = true;
+                lblDestPort.Visible = true;
+                lblDestUserID.Visible = true;
+                lblDestPwd.Visible = true;
+            }
+        }
+
+        private void btnDestConnection_Click_1(object sender, EventArgs e)
+        {
+            try
+            {
+                var connstring = Destination_connectionstring;
+                SqlConnection conn = new SqlConnection(connstring);
+                conn.Open();
+                MessageBox.Show("connection successful");
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("connection failed..");
+            }
+        }
+
+        private void button2_Click_2(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult result = fbd.ShowDialog();
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    txtFolderPath.Text = fbd.SelectedPath;
+                }
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            lstboxEntities.Items.Clear();
         }
     }
 }
